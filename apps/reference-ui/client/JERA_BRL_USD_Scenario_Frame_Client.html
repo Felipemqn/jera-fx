@@ -1,0 +1,1967 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JERA — BRL/USD Scenario Framework</title>
+  <meta name="description" content="Frame institucional do BRL/USD com bandas de REER, painel comparativo de valuation, sinal tático integrado, laboratório de sensibilidade e cenários 2026–2036." />
+  <style>
+    :root{
+      --bg:#f4f6f9;
+      --surface:#ffffff;
+      --surface2:#f9fbfd;
+      --ink:#0f1c2d;
+      --muted:#617286;
+      --line:#d9e1ea;
+      --line2:#c7d2df;
+      --navy:#10233b;
+      --navy2:#18314f;
+      --gold:#b08a2d;
+      --gold2:#e7d3a1;
+      --blue:#2f6fed;
+      --cyan:#1495aa;
+      --green:#1d9b5f;
+      --red:#cf4b46;
+      --orange:#d97706;
+      --violet:#7c6ee6;
+      --pink:#cf4f8b;
+      --silver:#8494a8;
+      --shadow:0 10px 30px rgba(16,35,59,.06);
+      --radius:22px;
+      --maxw:1400px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 420px at 0% -5%, rgba(47,111,237,.06), transparent 60%),
+        radial-gradient(980px 520px at 100% 0%, rgba(176,138,45,.08), transparent 60%),
+        linear-gradient(180deg, #f4f6f9 0%, #f3f6fa 100%);
+      color:var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    a{color:inherit;text-decoration:none}
+    .shell{max-width:var(--maxw); margin:0 auto; padding:24px 18px 56px}
+    .hero{
+      background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,251,253,.98));
+      border:1px solid rgba(16,35,59,.08);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      padding:24px 24px 20px;
+      overflow:hidden;
+      position:relative;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      right:-100px; top:-120px;
+      width:420px; height:420px;
+      background:radial-gradient(circle, rgba(176,138,45,.10), transparent 68%);
+      pointer-events:none;
+    }
+    .hero:after{
+      content:"";
+      position:absolute;
+      left:-120px; bottom:-180px;
+      width:520px; height:520px;
+      background:radial-gradient(circle, rgba(47,111,237,.07), transparent 66%);
+      pointer-events:none;
+    }
+    .hero > *{position:relative; z-index:1}
+    .brand-row{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; gap:14px; align-items:center;
+    }
+    .mark{
+      width:52px; height:52px; border-radius:50%;
+      display:grid; place-items:center;
+      background:linear-gradient(145deg, #ead7a6, #b08a2d);
+      color:#0f1c2d; font-weight:900; letter-spacing:.06em;
+      box-shadow:0 8px 16px rgba(176,138,45,.20);
+      flex:0 0 auto;
+    }
+    .kicker{font-size:12px; text-transform:uppercase; letter-spacing:.22em; color:var(--gold); font-weight:800}
+    .subk{font-size:11px; color:var(--muted); letter-spacing:.10em; text-transform:uppercase; margin-top:4px}
+    .asof{
+      padding:10px 12px; border-radius:999px;
+      border:1px solid rgba(16,35,59,.08); background:rgba(255,255,255,.72);
+      color:var(--muted); font-size:12px; white-space:nowrap;
+    }
+    h1{
+      margin:18px 0 8px;
+      max-width:1100px;
+      font-size:clamp(32px, 5vw, 54px);
+      line-height:1.02; letter-spacing:-.035em;
+    }
+    .lede{
+      max-width:1080px;
+      margin:0;
+      color:#314254;
+      font-size:clamp(16px, 2.1vw, 19px);
+      line-height:1.65;
+    }
+    .hero-grid{
+      display:grid; grid-template-columns:repeat(12,1fr); gap:12px;
+      margin-top:18px;
+    }
+    .kpi{
+      grid-column:span 2;
+      border:1px solid rgba(16,35,59,.08);
+      border-radius:18px;
+      background:rgba(255,255,255,.76);
+      padding:14px 14px 12px;
+      min-height:96px;
+    }
+    .kpi .label{
+      color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.10em;
+    }
+    .kpi .value{
+      margin-top:10px; font-size:28px; font-weight:800; letter-spacing:-.03em;
+    }
+    .kpi .sub{
+      margin-top:6px; color:var(--muted); font-size:12px; line-height:1.45;
+    }
+    .hero-note{
+      grid-column:span 4;
+      border:1px solid rgba(16,35,59,.08);
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(16,35,59,.96), rgba(19,38,61,.96));
+      color:#ecf2f8;
+      padding:16px 18px;
+    }
+    .hero-note .eyebrow{
+      color:var(--gold2); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+      margin-bottom:8px;
+    }
+    .hero-note p{
+      margin:0; color:#c6d5e4; line-height:1.7; font-size:14px;
+    }
+    .hero-note p strong{ color:#fff; font-weight:700; }
+    .gauge-card{
+      margin-top:14px;
+      border:1px solid rgba(16,35,59,.08);
+      border-radius:24px;
+      background:rgba(255,255,255,.86);
+      padding:16px 16px 18px;
+    }
+    .gauge-head{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .gauge-title{
+      font-size:18px; font-weight:800; letter-spacing:-.02em;
+    }
+    .gauge-sub{
+      color:var(--muted); font-size:13px; line-height:1.55; max-width:840px;
+    }
+    .gauge{
+      position:relative; height:28px; border-radius:999px;
+      background:linear-gradient(90deg, rgba(47,111,237,.06), rgba(176,138,45,.08), rgba(47,111,237,.06));
+      border:1px solid var(--line);
+      overflow:visible;
+      margin-top:16px;
+    }
+    .gauge-band{
+      position:absolute; top:4px; bottom:4px;
+      background:linear-gradient(90deg, rgba(47,111,237,.18), rgba(47,111,237,.11));
+      border-radius:999px;
+    }
+    .gauge-median{
+      position:absolute; top:1px; bottom:1px; width:2px; background:var(--blue);
+    }
+    .gauge-spot{
+      position:absolute; top:-4px; width:12px; height:36px; margin-left:-6px;
+      border-radius:999px; background:linear-gradient(180deg, #d0aa4a, #946c18); box-shadow:0 6px 12px rgba(176,138,45,.20);
+    }
+    .gauge-label{
+      position:absolute; top:38px; transform:translateX(-50%); font-size:11px; color:var(--muted); white-space:nowrap;
+    }
+    .gauge-label strong{ color:var(--ink); }
+    .section-nav{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter:saturate(160%) blur(10px);
+      background:rgba(244,246,249,.86);
+      border-bottom:1px solid rgba(16,35,59,.06);
+      margin:18px 0 20px;
+    }
+    .nav-inner{
+      max-width:var(--maxw); margin:0 auto; padding:10px 18px;
+      display:flex; gap:10px; overflow:auto;
+    }
+    .nav-chip{
+      padding:9px 14px; border-radius:999px; border:1px solid rgba(16,35,59,.08);
+      background:rgba(255,255,255,.72); color:var(--navy);
+      font-size:13px; font-weight:700; white-space:nowrap;
+    }
+    main section{ margin-top:28px; scroll-margin-top:84px; }
+    .section-head{
+      display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .section-head h2{
+      margin:0; font-size:28px; letter-spacing:-.03em;
+    }
+    .section-head p{
+      margin:6px 0 0; color:var(--muted); font-size:14px; line-height:1.7; max-width:980px;
+    }
+    .tag{
+      padding:9px 12px; border-radius:999px;
+      border:1px solid rgba(16,35,59,.08); background:rgba(255,255,255,.75);
+      color:var(--muted); font-size:12px; font-weight:700;
+    }
+    .grid-2{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px}
+    .grid-3{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px}
+    .panel{
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(16,35,59,.08);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:18px 18px 16px;
+    }
+    .panel h3{
+      margin:0; font-size:18px; letter-spacing:-.02em;
+    }
+    .panel .copy{
+      margin:8px 0 0; color:var(--muted); font-size:13px; line-height:1.65;
+    }
+    .legend{
+      display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;
+    }
+    .legend-item{
+      display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
+    }
+    .swatch{
+      width:16px; height:3px; border-radius:999px; display:inline-block; background:#000;
+    }
+    .insight-grid{
+      display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-top:12px;
+    }
+    .insight{
+      border:1px solid rgba(16,35,59,.08);
+      border-radius:18px; background:rgba(255,255,255,.84);
+      padding:14px 14px 12px;
+    }
+    .insight .cap{
+      font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:.12em; font-weight:800;
+    }
+    .insight h4{
+      margin:8px 0 6px; font-size:17px; letter-spacing:-.02em;
+    }
+    .insight p{
+      margin:0; color:var(--muted); font-size:13px; line-height:1.65;
+    }
+    .model-bars{ margin-top:14px; display:grid; gap:10px; }
+    .model-row{
+      display:grid; grid-template-columns:220px 1fr 84px; gap:12px; align-items:center;
+    }
+    .model-name{
+      font-size:13px; font-weight:700; color:var(--navy2); line-height:1.35;
+    }
+    .track{
+      position:relative; height:18px; border-radius:999px; background:#eef3f7;
+      border:1px solid rgba(16,35,59,.06); overflow:hidden;
+    }
+    .fill{
+      position:absolute; left:0; top:0; bottom:0; border-radius:999px;
+    }
+    .spot-marker{
+      position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--gold);
+    }
+    .model-val{
+      font-variant-numeric:tabular-nums; text-align:right; font-size:13px; font-weight:800; color:var(--ink);
+    }
+    .model-note{
+      margin-top:10px; font-size:12px; color:var(--muted); line-height:1.6;
+    }
+    .toolbar{
+      display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .preset-row,.chip-row,.hz-row,.hybrid-presets{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    button{
+      appearance:none; border:none; background:none; color:inherit; font:inherit;
+    }
+    .btn{
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(16,35,59,.10);
+      background:rgba(255,255,255,.74); color:var(--navy);
+      font-size:12px; font-weight:700; cursor:pointer;
+      transition:.15s ease;
+    }
+    .btn:hover{ transform:translateY(-1px) }
+    .btn.active{
+      background:linear-gradient(180deg, rgba(16,35,59,.94), rgba(19,38,61,.94));
+      color:#fff; border-color:rgba(16,35,59,.20);
+    }
+    .chip{
+      padding:7px 10px; border-radius:999px; font-size:12px; font-weight:700;
+      border:1px solid rgba(16,35,59,.10); background:#fff; color:var(--muted); cursor:pointer;
+    }
+    .chip.active{ color:var(--ink); border-color:currentColor; background:rgba(255,255,255,.94) }
+    .chart-wrap{ margin-top:6px; }
+    svg.chart{ width:100%; height:auto; display:block }
+    .table-wrap{overflow:auto; margin-top:12px}
+    table{ width:100%; border-collapse:collapse; min-width:720px; }
+    th,td{
+      padding:10px 10px; border-bottom:1px solid var(--line);
+      font-size:13px; text-align:left; vertical-align:middle;
+    }
+    th{
+      font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.10em; font-weight:800;
+    }
+    td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+    .gap-weak{ color:var(--green); font-weight:800; }
+    .gap-strong{ color:var(--red); font-weight:800; }
+    .gap-flat{ color:var(--ink); font-weight:800; }
+    .mini-note{
+      margin-top:10px; padding:11px 12px; border-radius:16px;
+      background:#fbfcfe; border:1px solid rgba(16,35,59,.08);
+      color:var(--muted); font-size:12px; line-height:1.65;
+    }
+    .hybrid-kpis{
+      display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px;
+      margin-top:10px;
+    }
+    .hyb-card{
+      padding:15px 14px; border-radius:18px;
+      border:1px solid rgba(16,35,59,.08); background:#fff;
+    }
+    .hyb-card .cap{
+      font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.10em;
+    }
+    .hyb-card .val{
+      margin-top:8px; font-size:29px; font-weight:800; letter-spacing:-.03em;
+    }
+    .hyb-card .sub{
+      margin-top:8px; font-size:12px; color:var(--muted); line-height:1.6;
+    }
+    .hybrid-grid{
+      display:grid; grid-template-columns:360px 1fr; gap:14px; margin-top:14px;
+    }
+    .control-grid{
+      display:grid; gap:12px;
+    }
+    .control{
+      border:1px solid rgba(16,35,59,.08); border-radius:16px; background:#fff; padding:12px 12px 10px;
+    }
+    .control .top{
+      display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;
+    }
+    .control label{
+      font-size:12px; font-weight:800; color:var(--navy); letter-spacing:.04em;
+    }
+    .control .value{
+      font-size:13px; font-weight:800; color:var(--gold);
+    }
+    input[type=range]{ width:100% }
+    .range-note{
+      margin-top:8px; color:var(--muted); font-size:11px; line-height:1.5;
+    }
+    .scenario-grid{
+      display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-top:12px;
+    }
+    .scenario-card{
+      border:1px solid rgba(16,35,59,.08); border-radius:18px; background:#fff; padding:14px;
+    }
+    .scenario-card .prob{
+      display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px;
+      font-size:11px; font-weight:800; border:1px solid rgba(16,35,59,.08); background:#f8fafc; color:var(--muted);
+    }
+    .scenario-card h4{ margin:12px 0 6px; font-size:17px; letter-spacing:-.02em; }
+    .scenario-card p{ margin:0; color:var(--muted); font-size:13px; line-height:1.65; }
+    .scenario-card .path{
+      margin-top:12px; font-size:27px; font-weight:800; letter-spacing:-.03em;
+    }
+    .horizon-cards{
+      display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; margin-top:12px;
+    }
+    .hz-card{
+      border:1px solid rgba(16,35,59,.08); border-radius:16px; background:#fff; padding:12px;
+    }
+    .hz-card .cap{
+      font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.10em; font-weight:800;
+    }
+    .hz-card .val{
+      margin-top:8px; font-size:23px; font-weight:800; letter-spacing:-.03em;
+    }
+    .hz-card .copy{
+      margin-top:8px; font-size:12px; color:var(--muted); line-height:1.55;
+    }
+    details.note-box{
+      border:1px solid rgba(16,35,59,.08); border-radius:18px; background:#fff; padding:14px 16px;
+    }
+    details.note-box + details.note-box{ margin-top:10px; }
+    details.note-box summary{
+      cursor:pointer; list-style:none; font-weight:800; color:var(--navy); font-size:15px;
+    }
+    details.note-box summary::-webkit-details-marker{ display:none; }
+    details.note-box .body{
+      margin-top:10px; color:var(--muted); font-size:13px; line-height:1.75;
+    }
+    .footer{
+      margin-top:30px; color:var(--muted); font-size:12px; line-height:1.8;
+      text-align:center;
+    }
+    .footer strong{ color:var(--ink) }
+    @media (max-width:1200px){
+      .hero-grid .kpi{grid-column:span 3}
+      .hero-note{grid-column:span 6}
+      .hybrid-grid{grid-template-columns:1fr}
+      .scenario-grid{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .horizon-cards{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .insight-grid{grid-template-columns:1fr}
+      .grid-3{grid-template-columns:1fr}
+      .grid-2{grid-template-columns:1fr}
+    }
+    @media (max-width:780px){
+      .shell{padding:16px 12px 44px}
+      .hero{padding:18px 16px 16px}
+      .hero-grid{grid-template-columns:repeat(2,1fr)}
+      .hero-grid .kpi{grid-column:span 1}
+      .hero-note{grid-column:span 2}
+      .model-row{grid-template-columns:1fr; gap:8px}
+      .scenario-grid{grid-template-columns:1fr}
+      .horizon-cards{grid-template-columns:1fr}
+      .hybrid-kpis{grid-template-columns:1fr}
+      .nav-inner{padding:10px 12px}
+      .gauge-label{font-size:10px}
+    }
+  
+    .lab-topline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:14px 0 16px}
+    .lab-mini{background:linear-gradient(180deg,#fff,#f9fbfd);border:1px solid rgba(16,35,59,.08);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+    .lab-mini span{display:block;font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted);font-weight:700}
+    .lab-mini strong{display:block;margin-top:8px;font-size:24px;line-height:1.1;color:var(--navy)}
+    .lab-mini .sub{margin-top:4px;font-size:11px;color:var(--muted)}
+    .lab-grid{display:grid;grid-template-columns:1.03fr .97fr;gap:16px}
+    .waterfall{display:grid;gap:10px;margin-top:14px}
+    .wf-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;padding-bottom:10px;border-bottom:1px solid var(--line)}
+    .wf-head .left{font-size:12px;color:var(--muted)}
+    .wf-head .right{font-size:22px;font-weight:800;color:var(--navy)}
+    .wf-row{display:grid;grid-template-columns:116px 1fr 76px;gap:12px;align-items:center}
+    .wf-label{font-size:12px;color:var(--muted);font-weight:700}
+    .wf-track{height:12px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .wf-bar{display:block;height:100%;border-radius:999px}
+    .wf-bar.pos{background:linear-gradient(90deg, rgba(217,119,6,.28), rgba(207,75,70,.85))}
+    .wf-bar.neg{background:linear-gradient(90deg, rgba(29,155,95,.85), rgba(20,149,170,.28))}
+    .wf-val{font-size:12px;font-weight:800;text-align:right}
+    .wf-total{margin-top:6px;padding-top:10px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .wf-total .cap{font-size:12px;color:var(--muted);font-weight:700}
+    .wf-total .num{font-size:22px;color:var(--navy);font-weight:800}
+    .lab-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+    .lab-legend .legend-item{font-size:11px}
+    .lab-heatmap{margin-top:14px}
+    .hm-grid{display:grid;grid-template-columns:88px repeat(5,minmax(0,1fr));gap:8px;align-items:stretch}
+    .hm-head{font-size:11px;color:var(--muted);font-weight:800;text-align:center;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px}
+    .hm-rowlab{font-size:11px;color:var(--muted);font-weight:800;display:flex;align-items:center}
+    .hm-cell{border-radius:14px;border:1px solid rgba(16,35,59,.08);min-height:62px;padding:6px 4px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative}
+    .hm-cell strong{font-size:15px;line-height:1;color:var(--navy)}
+    .hm-cell span{font-size:10px;color:rgba(15,28,45,.82);margin-top:4px}
+    .hm-cell.active{outline:2px solid var(--navy);outline-offset:2px}
+    .lab-footnote{margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7}
+    .driver-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+    .driver-card{background:linear-gradient(180deg,#fff,#f9fbfd);border:1px solid rgba(16,35,59,.08);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+    .driver-card .cap{font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted);font-weight:700}
+    .driver-card h4{margin:8px 0 6px;font-size:18px;line-height:1.15;color:var(--navy)}
+    .driver-card p{margin:0;font-size:13px;color:var(--muted);line-height:1.65}
+    @media (max-width:1180px){
+      .lab-topline{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .driver-grid{grid-template-columns:1fr}
+    }
+    @media (max-width:900px){
+      .lab-grid{grid-template-columns:1fr}
+      .lab-topline{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:700px){
+      .lab-topline{grid-template-columns:1fr}
+      .wf-row{grid-template-columns:92px 1fr 64px;gap:8px}
+      .wf-head .right,.wf-total .num,.lab-mini strong{font-size:20px}
+      .hm-grid{grid-template-columns:68px repeat(5,minmax(0,1fr));gap:6px}
+      .hm-cell{min-height:58px}
+      .hm-cell strong{font-size:13px}
+      .hm-cell span{font-size:9px}
+    }
+
+  
+    .mini-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px}
+    .mini-card{border:1px solid rgba(16,35,59,.08);border-radius:16px;background:rgba(255,255,255,.68);padding:12px 12px 10px}
+    .mini-card .cap{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+    .mini-card .big{font-size:22px;font-weight:700;color:var(--ink)}
+    .mini-card .sub{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+    .pill-note{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(47,111,237,.08);border:1px solid rgba(47,111,237,.14);font-size:12px;color:var(--navy)}
+    @media (max-width: 900px){ .mini-grid-4{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width: 640px){ .mini-grid-4{grid-template-columns:1fr} }
+
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div class="brand-row">
+        <div class="brand">
+          <div class="mark">J</div>
+          <div>
+            <div class="kicker">JERA Capital Research</div>
+            <div class="subk">BRL/USD institutional monitor · abril 2026</div>
+          </div>
+        </div>
+        <div class="asof">Base: PTAX 02/04/2026 · REER e broad dollar: Fev/2026 · Focus: 27/03/2026</div>
+      </div>
+      <h1>Real brasileiro — quadro estrutural, painel comparativo e cenários 2026–2036</h1>
+      <p class="lede">O benchmark REER coloca o BRL <strong>dentro da banda estrutural, no lado fraco</strong>. O app separa três leituras: <strong>âncora estrutural</strong>, <strong>sinal tático integrado</strong> e <strong>laboratório de sensibilidade</strong>. Para a próxima década, os dois eixos dominantes continuam sendo o <strong>regime do dólar global</strong> e o <strong>prêmio de risco doméstico</strong>.</p>
+
+      <div class="hero-grid">
+        <div class="kpi">
+          <div class="label">PTAX venda</div>
+          <div class="value">R$ 5,17</div>
+          <div class="sub">02/04/2026</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Spot mensal</div>
+          <div class="value">R$ 5,20</div>
+          <div class="sub">média de Fev/2026</div>
+        </div>
+        <div class="kpi">
+          <div class="label">REER Brasil</div>
+          <div class="value">111,67</div>
+          <div class="sub">34,6º percentil da história 2000–2025</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Banda REER</div>
+          <div class="value">4,11–5,63</div>
+          <div class="sub">faixa nominal implícita</div>
+        </div>
+        <div class="kpi">
+          <div class="label">REER + broad dollar</div>
+          <div class="value">R$ 5,14</div>
+          <div class="sub">híbrido com dollar beta 0,45</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Sinal tático</div>
+          <div class="value">R$ 5,54</div>
+          <div class="sub">justo tático · ridge regularizada</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Painel comparativo</div>
+          <div class="value">R$ 5,23</div>
+          <div class="sub">média ponderada das famílias</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Focus</div>
+          <div class="value">5,40 / 5,45</div>
+          <div class="sub">2026 / 2027</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Selic / IPCA</div>
+          <div class="value">14,75 / 3,81</div>
+          <div class="sub">Copom mar/26 · IPCA 12m fev/26</div>
+        </div>
+        <div class="hero-note">
+          <div class="eyebrow">Leitura central</div>
+          <p><strong>REER puro:</strong> justo mediano em <strong>R$ 4,77</strong> e banda em <strong>R$ 4,11–5,63</strong>. <strong>REER + dólar global:</strong> com o broad dollar em <strong>117,9</strong>, o justo sobe para perto de <strong>R$ 5,14</strong>. <strong>Sinal tático integrado:</strong> a camada ridge aponta <strong>R$ 5,54</strong>, cerca de <strong>+4,6%</strong> acima do spot. A leitura operacional fica clara: <strong>REER é a âncora estrutural; o sinal tático organiza o curto e o médio prazos; o laboratório mede o impacto das hipóteses de cenário</strong>.</p>
+        </div>
+      </div>
+
+      <div class="gauge-card">
+        <div class="gauge-head">
+          <div>
+            <div class="gauge-title">Posição atual do BRL dentro da banda estrutural</div>
+            <div class="gauge-sub">A barra abaixo usa a banda nominal derivada do REER. O marcador dourado mostra o spot PTAX atual. A linha azul mostra a mediana estrutural. A leitura operacional é “dentro da banda, lado fraco”.</div>
+          </div>
+          <div class="tag">Benchmark estrutural</div>
+        </div>
+        <div class="gauge" id="valuation-gauge">
+          <div class="gauge-band" id="gauge-band"></div>
+          <div class="gauge-median" id="gauge-median"></div>
+          <div class="gauge-spot" id="gauge-spot"></div>
+          <div class="gauge-label" id="gauge-low">Banda baixa<br><strong>R$ 4,11</strong></div>
+          <div class="gauge-label" id="gauge-med">Mediana<br><strong>R$ 4,77</strong></div>
+          <div class="gauge-label" id="gauge-high">Banda alta<br><strong>R$ 5,63</strong></div>
+          <div class="gauge-label" id="gauge-current">Spot atual<br><strong>R$ 5,17</strong></div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="section-nav" aria-label="Seções">
+      <div class="nav-inner">
+        <a class="nav-chip" href="#reer">REER & bandas</a>
+        <a class="nav-chip" href="#signal">Sinal tático</a>
+        <a class="nav-chip" href="#models">Painel comparativo</a>
+        <a class="nav-chip" href="#hybrids">Híbridos</a>
+        <a class="nav-chip" href="#lab">Laboratório</a>
+        <a class="nav-chip" href="#scenarios">Cenários 2026–2036</a>
+        <a class="nav-chip" href="#method">Método & fontes</a>
+      </div>
+    </nav>
+
+    <main>
+      <section id="reer">
+        <div class="section-head">
+          <div>
+            <h2>Benchmark estrutural — REER nas bandas</h2>
+            <p>O benchmark principal do material é o REER amplo do Brasil. O primeiro gráfico mostra o índice real efetivo dentro da banda interquartil histórica. O segundo converte essa leitura para uma banda nominal de BRL/USD.</p>
+          </div>
+          <div class="tag">camada oficial</div>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <h3>REER do Brasil vs banda histórica</h3>
+            <p class="copy">No REER, <strong>nível mais alto = real mais forte em termos reais</strong>. O valor de 111,67 em Fev/2026 está abaixo da mediana histórica, mas dentro do intervalo 25–75.</p>
+            <div class="chart-wrap" id="reer-band-chart"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="swatch" style="background:rgba(47,111,237,.35)"></span>banda interquartil REER</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--blue)"></span>mediana REER</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--navy)"></span>REER observado</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>BRL/USD nominal vs banda implícita do REER</h3>
+            <p class="copy">Aqui, <strong>nível mais alto = real mais fraco</strong>. A área azul é a banda nominal derivada do REER. O spot atual está dentro da faixa, acima da mediana, mas abaixo de episódios de disfunção como 2002 ou 2024.</p>
+            <div class="chart-wrap" id="nominal-band-chart"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="swatch" style="background:rgba(47,111,237,.30)"></span>banda nominal</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--blue)"></span>mediana nominal</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--gold)"></span>spot BRL/USD</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="insight-grid">
+          <div class="insight">
+            <div class="cap">Insight 1</div>
+            <h4>Não é extremo de crise</h4>
+            <p>O REER atual está cerca de 8% abaixo da mediana de 2000–2025, mas ainda dentro da faixa interquartil. Isso sustenta a leitura de BRL fraco, porém sem o mesmo grau de desajuste visto em 2002.</p>
+          </div>
+          <div class="insight">
+            <div class="cap">Insight 2</div>
+            <h4>2002 e 2011 continuam sendo os polos úteis</h4>
+            <p>2002 continua sendo a referência de real muito fraco em termos reais; 2010–2011, a referência de real muito forte. O ponto atual está entre esses extremos, muito mais próximo de uma moeda “fraca, mas funcional”.</p>
+          </div>
+          <div class="insight">
+            <div class="cap">Insight 3</div>
+            <h4>REER funciona melhor em janelas longas</h4>
+            <p>O próprio histórico do material mostra que sinais estruturais são mais informativos em horizontes de 4–5 anos do que em 12 meses. Por isso o app separa benchmark, híbridos e cenários de década.</p>
+          </div>
+        </div>
+      </section>
+
+      
+      <section id="signal">
+        <div class="section-head">
+          <div>
+            <h2>Sinal tático integrado</h2>
+            <p>Esta camada combina a âncora REER com um painel comparativo de valuation e risco para organizar o horizonte tático. A proposta é separar com clareza o que é <strong>equilíbrio estrutural</strong> do que é <strong>regime recente de mercado</strong>, preservando transparência e governança.</p>
+          </div>
+          <div class="tag">camada tática</div>
+        </div>
+
+        <article class="panel">
+          <div class="pill-note">A leitura do framework é simples: <strong>REER nas bandas</strong> localiza o real na distribuição histórica; <strong>sinal tático integrado</strong> traduz o regime recente de mercado; <strong>laboratório de sensibilidade</strong> mede o impacto de mudanças de cenário.</div>
+          <div class="mini-grid-4">
+            <div class="mini-card">
+              <div class="cap">Spot atual</div>
+              <div class="big">R$ 5,30</div>
+              <div class="sub">referência de mercado no painel mensal</div>
+            </div>
+            <div class="mini-card">
+              <div class="cap">Sinal tático</div>
+              <div class="big">R$ 5,54</div>
+              <div class="sub">justo one-step-ahead com ridge regularizada</div>
+            </div>
+            <div class="mini-card">
+              <div class="cap">Âncora REER</div>
+              <div class="big">R$ 4,74</div>
+              <div class="sub">equilíbrio estrutural da banda</div>
+            </div>
+            <div class="mini-card">
+              <div class="cap">Gap vs spot</div>
+              <div class="big">+4,6%</div>
+              <div class="sub">justo tático acima do spot</div>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top:14px">
+            <article class="panel" style="padding:16px">
+              <h3>Estrutura do sinal</h3>
+              <p class="copy">Regressão <strong>ridge regularizada</strong> em base mensal <strong>Jan/2010–Dez/2023</strong>, com seleção do grau de penalização em janela de validação <strong>Jan/2021–Dez/2023</strong>. O conjunto final foi reduzido a seis variáveis com melhor governança e estabilidade: <strong>REER fair</strong>, <strong>média do painel comparativo</strong>, <strong>carry fair</strong>, <strong>dispersão do painel</strong>, <strong>amplitude do painel</strong> e <strong>gap painel-vs-REER</strong>.</p>
+              <div class="mini-note">A escolha de uma regressão regularizada foi deliberada: a base é relativamente pequena e colinear. O objetivo é estabilidade operacional e boa leitura econômica, não um modelo opaco.</div>
+              <div class="table-wrap" style="margin-top:12px">
+                <table>
+                  <thead>
+                    <tr><th>Bloco</th><th class="num">papel econômico</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Âncora REER</td><td class="num">equilíbrio estrutural</td></tr>
+                    <tr><td>Painel comparativo médio</td><td class="num">nível relativo de mercado</td></tr>
+                    <tr><td>Carry fair</td><td class="num">juros reais / prêmio</td></tr>
+                    <tr><td>Dispersão e amplitude</td><td class="num">incerteza entre famílias</td></tr>
+                    <tr><td>Gap painel-vs-REER</td><td class="num">descolamento tático do estrutural</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="panel" style="padding:16px">
+              <h3>Aderência fora da amostra</h3>
+              <p class="copy">O coeficiente foi congelado no fim de 2023 e testado no período seguinte. O quadro abaixo compara o sinal tático integrado com referências mais simples e transparentes.</p>
+              <div class="table-wrap" style="margin-top:12px">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Referência</th>
+                      <th class="num">RMSE</th>
+                      <th class="num">MAE</th>
+                      <th class="num">R²</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jera-ml-metrics-body"></tbody>
+                </table>
+              </div>
+              <div class="chart-wrap" id="jera-ml-rmse-chart"></div>
+            </article>
+          </div>
+
+          <article class="panel" style="margin-top:14px">
+            <h3>Backtest visual — spot vs sinal tático</h3>
+            <p class="copy">Linha dourada: spot. Azul: sinal tático integrado congelado em 2023. Linhas auxiliares: média do painel comparativo, composite macro-finance e âncora REER.</p>
+            <div class="chart-wrap" id="jera-ml-chart"></div>
+            <div class="mini-note">Leitura atual: a âncora REER ainda sugere BRL no lado fraco da banda; o sinal tático, ao incorporar o regime recente de mercado, desloca o justo nominal para cima. A diferença entre os dois é o principal espaço de trabalho do laboratório.</div>
+          </article>
+        </article>
+      </section>
+
+      <section id="models">
+        <div class="section-head">
+          <div>
+            <h2>Painel comparativo de valuation</h2>
+            <p>O gráfico com todas as famílias de valuation foi mantido como <strong>quadro comparativo</strong>. O objetivo é mostrar dispersão entre abordagens estruturais, externas, de custo e de mercado. A série histórica abaixo preserva a coerência relativa entre famílias e deve ser lida como <strong>painel comparativo</strong>, não como benchmark principal.</p>
+          </div>
+          <div class="tag">painel comparativo</div>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <h3>Valores justos correntes — 9 famílias</h3>
+            <p class="copy">Ordenados do menor para o maior valor justo. A marca dourada indica o spot PTAX de 02/04/2026. A dispersão continua ampla: de R$ 3,98 a R$ 6,15.</p>
+            <div class="model-bars" id="model-bars"></div>
+            <div class="model-note">Leitura prática: famílias de <strong>PPP</strong> e <strong>competitividade</strong> deixam o BRL relativamente mais forte; abordagens de <strong>equilíbrio externo</strong>, <strong>juros/risco</strong> e <strong>macro-finance</strong> aceitam um BRL estruturalmente mais fraco.</div>
+          </article>
+
+          <article class="panel">
+            <h3>Tabela resumida</h3>
+            <p class="copy">A coluna “Gap vs spot” compara cada valor justo ao PTAX de 02/04/2026. Valor positivo indica que o spot está acima do justo daquele modelo, portanto o BRL aparece mais fraco do que o modelo aceitaria.</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Família</th>
+                    <th class="num">Justo</th>
+                    <th class="num">Gap vs spot</th>
+                    <th class="num">RMSE</th>
+                  </tr>
+                </thead>
+                <tbody id="model-table-body"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel" style="margin-top:14px">
+          <div class="toolbar">
+            <div class="preset-row">
+              <button class="btn active" data-model-preset="all">Todos</button>
+              <button class="btn" data-model-preset="core">Núcleo estrutural</button>
+              <button class="btn" data-model-preset="tactical">Táticos / mercado</button>
+              <button class="btn" data-model-preset="jera">Composites</button>
+            </div>
+            <div class="chip-row" id="model-chip-row"></div>
+          </div>
+          <div class="chart-wrap" id="all-models-chart"></div>
+          <div class="mini-note">A série histórica deste painel preserva a relação relativa entre famílias de valuation ao longo do tempo e é útil como quadro comparativo. Para localização estrutural do real, a referência principal continua sendo o benchmark REER.</div>
+        </article>
+      </section>
+
+      <section id="hybrids">
+        <div class="section-head">
+          <div>
+            <h2>Modelos híbridos — REER × dólar global × produtividade</h2>
+            <p>Esta seção testa combinações pedidas no briefing: <strong>REER com ajuste pelo dólar global</strong> e <strong>REER com ajuste simultâneo por dólar global e produtividade relativa</strong>. Para manter padrão institucional, eles aparecem como <strong>overlays experimentais</strong>: transparentes, parametrizáveis e úteis para cenário, sem vender falsa precisão econométrica.</p>
+          </div>
+          <div class="tag">camada de sensibilidade</div>
+        </div>
+
+        <div class="hybrid-kpis">
+          <div class="hyb-card">
+            <div class="cap">REER puro</div>
+            <div class="val" id="hyb-reer-val">R$ 4,77</div>
+            <div class="sub">Âncora estrutural obtida diretamente da posição atual do REER dentro da distribuição histórica.</div>
+          </div>
+          <div class="hyb-card">
+            <div class="cap">REER + dólar global</div>
+            <div class="val" id="hyb-dxy-val">R$ 5,14</div>
+            <div class="sub">Eleva o justo quando o broad dollar / proxy DXY opera acima do nível neutro.</div>
+          </div>
+          <div class="hyb-card">
+            <div class="cap">REER + dólar global + produtividade</div>
+            <div class="val" id="hyb-prod-val">R$ 5,14</div>
+            <div class="sub">Camada de longo prazo. A produtividade relativa deve ser lida em janelas de vários anos, não como target tático de 12 meses.</div>
+          </div>
+        </div>
+
+        <div class="hybrid-grid">
+          <article class="panel">
+            <h3>Parâmetros</h3>
+            <p class="copy">No app, “DXY” é tratado como <strong>broad dollar / proxy do regime do dólar</strong>. A produtividade entra como diferencial acumulado de EUA versus Brasil para a próxima fase do ciclo.</p>
+
+            <div class="hybrid-presets" style="margin-top:12px">
+              <button class="btn active" data-hybrid-preset="current">Base atual</button>
+              <button class="btn" data-hybrid-preset="soft">Dólar mais fraco</button>
+              <button class="btn" data-hybrid-preset="strong">Dólar forte</button>
+              <button class="btn" data-hybrid-preset="ai">US exceptionalism</button>
+            </div>
+
+            <div class="control-grid" style="margin-top:12px">
+              <div class="control">
+                <div class="top"><label for="dxy">Broad dollar / proxy DXY</label><div class="value" id="dxy-out">117,9</div></div>
+                <input id="dxy" type="range" min="85" max="130" step="0.1" value="117.906" />
+                <div class="range-note">Nível neutro embutido: 100. Quanto mais alto o dólar global, mais fraco tende a ser o BRL justo do híbrido.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="beta-dxy">Beta do dólar global</label><div class="value" id="beta-dxy-out">0,45</div></div>
+                <input id="beta-dxy" type="range" min="0.20" max="0.70" step="0.01" value="0.45" />
+                <div class="range-note">Sensibilidade do BRL justo ao regime do dólar global. Quanto maior o beta, maior o impacto do dólar forte no valor justo.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="prod-gap">Produtividade EUA vs BR (acumulada)</label><div class="value" id="prod-gap-out">0%</div></div>
+                <input id="prod-gap" type="range" min="-10" max="25" step="1" value="0" />
+                <div class="range-note">Diferença acumulada de produtividade para a próxima fase do ciclo. Valor positivo significa EUA avançando mais rápido que o Brasil.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="beta-prod">Beta da produtividade</label><div class="value" id="beta-prod-out">0,60</div></div>
+                <input id="beta-prod" type="range" min="0.00" max="0.80" step="0.01" value="0.60" />
+                <div class="range-note">Coeficiente aplicado ao diferencial de produtividade. Esta camada deve ser lida apenas em horizontes longos.</div>
+              </div>
+            </div>
+
+            <div class="mini-note">Fórmula usada no overlay: <strong>justo = REER justo × (DXY/100)^β_dxy × exp(β_prod × gap de produtividade)</strong>. O objetivo é testar cenários combinados mantendo a âncora estrutural do REER.</div>
+          </article>
+
+          <article class="panel">
+            <h3>Curvas híbridas</h3>
+            <p class="copy">As linhas mostram como o justo se desloca quando o dólar global sobe ou cai. O marcador vertical mostra o broad dollar de Fev/2026. A linha horizontal dourada indica o spot PTAX atual.</p>
+            <div class="chart-wrap" id="hybrid-curve-chart"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="swatch" style="background:var(--blue)"></span>produtividade 0%</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--violet)"></span>produtividade +10%</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--pink)"></span>produtividade +20%</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--navy)"></span>curva custom</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="insight-grid" style="margin-top:14px">
+          <div class="insight">
+            <div class="cap">Leitura</div>
+            <h4>O dólar global fecha parte do desconto</h4>
+            <p>REER puro deixa o BRL mais fraco que o justo. Quando o broad dollar entra explicitamente no modelo, boa parte desse desconto desaparece. Isso melhora a consistência entre “real fraco” e “REER não extremo”.</p>
+          </div>
+          <div class="insight">
+            <div class="cap">Horizonte</div>
+            <h4>Produtividade é uma variável de década</h4>
+            <p>O componente de produtividade é útil para 5–10 anos, especialmente em cenários de exceptionalism americano. Não é uma variável de curto prazo e por isso não deve dominar a discussão tática de 12 meses.</p>
+          </div>
+          <div class="insight">
+            <div class="cap">Governança</div>
+            <h4>Overlay experimental, não benchmark oficial</h4>
+            <p>Os híbridos entram como testes transparentes, não como “verdade única”. Isso preserva rigor institucional: benchmark REER para localização estrutural, painel comparativo para dispersão de leituras e híbridos para sensibilidade de cenário.</p>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="lab">
+        <div class="section-head">
+          <div>
+            <h2>Laboratório de Sensibilidade — variáveis → BRL/USD</h2>
+            <p>Ferramenta semi-estrutural para deslocar a taxa justa do BRL/USD por mudanças nas variáveis centrais do regime macro: <strong>âncora REER</strong>, <strong>dólar global</strong>, <strong>CDS Brasil</strong>, <strong>carry real</strong>, <strong>commodities</strong> e <strong>produtividade relativa</strong>. A leitura é deliberadamente transparente: mapear direção, convexidade e magnitude relativa, sem esconder a mecânica do modelo.</p>
+          </div>
+          <div class="tag">laboratório</div>
+        </div>
+
+        <div class="lab-topline">
+          <div class="lab-mini">
+            <span>Spot PTAX</span>
+            <strong id="lab-top-spot">R$ 5,17</strong>
+            <div class="sub">ponto de partida</div>
+          </div>
+          <div class="lab-mini">
+            <span>Justo 12m</span>
+            <strong id="lab-top-1y">R$ 0,00</strong>
+            <div class="sub">horizonte tático</div>
+          </div>
+          <div class="lab-mini">
+            <span>Justo 3a</span>
+            <strong id="lab-top-3y">R$ 0,00</strong>
+            <div class="sub">ponte cíclica</div>
+          </div>
+          <div class="lab-mini">
+            <span>Justo 5a</span>
+            <strong id="lab-top-5y">R$ 0,00</strong>
+            <div class="sub">núcleo estrutural</div>
+          </div>
+          <div class="lab-mini">
+            <span>Justo 10a</span>
+            <strong id="lab-top-10y">R$ 0,00</strong>
+            <div class="sub">camada secular</div>
+          </div>
+        </div>
+
+        <div class="lab-grid">
+          <article class="panel">
+            <h3>Premissas</h3>
+            <p class="copy">Os sliders deslocam a taxa justa de forma multiplicativa. O <strong>REER</strong> fixa a âncora; <strong>DXY</strong> e <strong>CDS</strong> governam o regime; <strong>carry</strong> e <strong>commodities</strong> ajudam no ciclo; <strong>produtividade</strong> entra com peso crescente no longo prazo.</p>
+            <div class="hybrid-presets" style="margin-top:12px">
+              <button class="btn active" data-lab-preset="current">Atual</button>
+              <button class="btn" data-lab-preset="reform">Reforma + dólar mais fraco</button>
+              <button class="btn" data-lab-preset="fiscal">Fiscal mais frágil</button>
+              <button class="btn" data-lab-preset="commodities">China lenta / commodities</button>
+              <button class="btn" data-lab-preset="ai">US exceptionalism</button>
+            </div>
+            <div class="control-grid" style="margin-top:12px">
+              <div class="control">
+                <div class="top"><label for="lab-anchor">Âncora REER convertida em BRL/USD</label><div class="value" id="lab-anchor-out">4,77</div></div>
+                <input id="lab-anchor" type="range" min="4.11" max="5.63" step="0.01" value="4.77" />
+                <div class="range-note">Corredor estrutural derivado das bandas do REER. Valores mais altos significam um equilíbrio real mais fraco.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="lab-dxy">Broad dollar / proxy DXY</label><div class="value" id="lab-dxy-out">117,9</div></div>
+                <input id="lab-dxy" type="range" min="85" max="130" step="0.1" value="117.906" />
+                <div class="range-note">Motor externo dominante do BRL. Quanto mais alto o dólar global, maior o justo implícito de BRL/USD.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="lab-cds">CDS Brasil 5Y (bps)</label><div class="value" id="lab-cds-out">139</div></div>
+                <input id="lab-cds" type="range" min="60" max="400" step="5" value="139" />
+                <div class="range-note">Proxy de risco soberano. A piora do CDS desloca o justo para cima e amplia a convexidade do cenário fiscal.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="lab-carry">Carry real (pp)</label><div class="value" id="lab-carry-out">9,9</div></div>
+                <input id="lab-carry" type="range" min="3" max="14" step="0.1" value="9.85" />
+                <div class="range-note">Carry mais alto sustenta o BRL no horizonte tático. No longo prazo, esse canal perde peso para regime externo e produtividade.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="lab-comm">Índice de commodities BR-linked (base=100)</label><div class="value" id="lab-comm-out">100</div></div>
+                <input id="lab-comm" type="range" min="70" max="130" step="1" value="100" />
+                <div class="range-note">Acima de 100 indica termos de troca mais favoráveis ao BRL. Abaixo de 100 pressiona a taxa justa para cima.</div>
+              </div>
+              <div class="control">
+                <div class="top"><label for="lab-prod">Produtividade EUA vs BR (acumulada, %)</label><div class="value" id="lab-prod-out">0%</div></div>
+                <input id="lab-prod" type="range" min="-10" max="20" step="1" value="0" />
+                <div class="range-note">Positivo significa EUA avançando mais rápido. Esse canal deve ser lido como força de 5–10 anos, não como alvo tático.</div>
+              </div>
+            </div>
+            <div class="mini-note">Estrutura usada no laboratório: <strong>justo = âncora REER × DXY × CDS × carry × commodities × produtividade</strong>, com pesos que mudam por horizonte. O objetivo é testar a sensibilidade do BRL e decompor o impacto de cada driver.</div>
+          </article>
+
+          <article class="panel">
+            <h3>Decomposição do justo</h3>
+            <p class="copy">Escolha o horizonte analítico. O waterfall abaixo mostra como cada variável desloca a taxa justa a partir da âncora REER.</p>
+            <div class="hz-row" style="margin-top:12px">
+              <button class="btn" data-lab-hz="1">12m</button>
+              <button class="btn" data-lab-hz="3">3a</button>
+              <button class="btn active" data-lab-hz="5">5a</button>
+              <button class="btn" data-lab-hz="10">10a</button>
+            </div>
+            <div class="waterfall" id="lab-contrib-bars"></div>
+            <div class="mini-note" id="lab-readout" style="margin-top:12px"></div>
+            <div class="lab-footnote">Sinais default: <strong>DXY ↑</strong> → BRL/USD ↑; <strong>CDS ↑</strong> → ↑; <strong>carry ↑</strong> → ↓; <strong>commodities ↑</strong> → ↓; <strong>produtividade EUA vs BR ↑</strong> → ↑ no horizonte longo.</div>
+          </article>
+        </div>
+
+        <div class="lab-grid" style="margin-top:14px">
+          <article class="panel">
+            <h3>Trajetória implicada 2026–2036</h3>
+            <p class="copy">A linha central costura os justos de 12 meses, 3 anos, 5 anos e 10 anos. A faixa mostra um corredor mecânico de ±6% em torno da trajetória central.</p>
+            <div class="chart-wrap" id="lab-path-chart"></div>
+            <div class="lab-legend">
+              <div class="legend-item"><span class="swatch" style="background:rgba(47,111,237,.16)"></span>corredor ±6%</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--navy)"></span>trajetória implicada</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--gold)"></span>spot atual</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>Matriz DXY × CDS</h3>
+            <p class="copy">Mapa instantâneo do justo em 5 anos. Os demais drivers ficam travados nos sliders. Isso permite visualizar rapidamente o efeito conjunto de regime externo e prêmio soberano.</p>
+            <div class="lab-heatmap" id="lab-heatmap"></div>
+            <div class="lab-footnote">Os valores exibem <strong>BRL/USD justo em R$</strong>. A célula contornada é a mais próxima da combinação atual dos sliders.</div>
+          </article>
+        </div>
+
+        <div class="driver-grid" id="lab-insights"></div>
+      </section>
+
+
+      <section id="scenarios">
+        <div class="section-head">
+          <div>
+            <h2>Cenários nominais 2026–2036</h2>
+            <p>Os cenários abaixo mantêm a estrutura da versão institucional: uma década organizada por regime do dólar global e prêmio de risco doméstico. A área clara mostra o corredor entre o cenário benigno e a cauda de super-dólar.</p>
+          </div>
+          <div class="tag">camada de década</div>
+        </div>
+
+        <div class="scenario-grid">
+          <article class="scenario-card">
+            <div class="prob">25%</div>
+            <h4 style="color:var(--green)">Reforma + dólar mais fraco</h4>
+            <p>Queda do prêmio de risco local e normalização do dólar global. O BRL volta para a metade forte da banda.</p>
+            <div class="path" style="color:var(--green)">R$ 5,40</div>
+          </article>
+          <article class="scenario-card">
+            <div class="prob">50%</div>
+            <h4 style="color:var(--gold)">Base / prêmio sticky</h4>
+            <p>Sem crise clássica, mas com prêmio doméstico persistente e dólar ainda dominante. A década termina mais fraca do que o benchmark estrutural puro.</p>
+            <div class="path" style="color:var(--gold)">R$ 6,30</div>
+          </article>
+          <article class="scenario-card">
+            <div class="prob">15%</div>
+            <h4 style="color:var(--red)">Prêmio fiscal</h4>
+            <p>CDS mais alto, credibilidade fiscal menor e banda nominal estruturalmente mais fraca ao longo da década.</p>
+            <div class="path" style="color:var(--red)">R$ 9,00</div>
+          </article>
+          <article class="scenario-card">
+            <div class="prob">10%</div>
+            <h4 style="color:var(--orange)">Super-dólar / EUA excepcional</h4>
+            <p>Dólar global em regime alto e produtividade americana persistentemente superior. É a principal cauda de longo prazo para o BRL.</p>
+            <div class="path" style="color:var(--orange)">R$ 10,30</div>
+          </article>
+        </div>
+
+        <div class="grid-2" style="margin-top:14px">
+          <article class="panel">
+            <h3>Trajetórias anuais</h3>
+            <p class="copy">O eixo do gráfico é nominal. Nível mais alto significa BRL mais fraco. A linha azul mostra a esperança ponderada da casa.</p>
+            <div class="chart-wrap" id="scenario-chart"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="swatch" style="background:var(--green)"></span>benigno</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--gold)"></span>base</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--red)"></span>fiscal</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--orange)"></span>super-dólar</div>
+              <div class="legend-item"><span class="swatch" style="background:var(--blue)"></span>esperança ponderada</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>Leitura por horizonte</h3>
+            <p class="copy">O seletor abaixo resume o mesmo cenário em três marcos: 2027, 2031 e 2036.</p>
+            <div class="hz-row" style="margin-top:12px">
+              <button class="btn" data-hz="2027">2027</button>
+              <button class="btn active" data-hz="2031">2031</button>
+              <button class="btn" data-hz="2036">2036</button>
+            </div>
+            <div class="mini-note" id="hz-note" style="margin-top:12px"></div>
+            <div class="horizon-cards" id="horizon-cards"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="method">
+        <div class="section-head">
+          <div>
+            <h2>Arquitetura, método e fontes</h2>
+            <p>O framework foi organizado para permitir trabalho de cenário pela equipe de investimento e leitura direta por clientes. A lógica é simples: benchmark estrutural, sinal tático integrado, painel comparativo e laboratório de sensibilidade.</p>
+          </div>
+          <div class="tag">transparência metodológica</div>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <h3>Arquitetura do material</h3>
+            <details class="note-box" open>
+              <summary>1. Benchmark estrutural: REER nas bandas</summary>
+              <div class="body">Esta é a camada principal. Ela usa o REER amplo do Brasil para localizar o câmbio dentro da distribuição histórica e converter esse posicionamento em uma banda nominal implícita para o BRL/USD.</div>
+            </details>
+            <details class="note-box" open>
+              <summary>2. Sinal tático e painel comparativo</summary>
+              <div class="body">O sinal tático integra a âncora REER com um painel comparativo de valuation e risco. Já o painel comparativo preserva a dispersão entre famílias de leitura. A série histórica dessa camada deve ser lida como quadro comparativo, não como benchmark principal.</div>
+            </details>
+            <details class="note-box" open>
+              <summary>3. Híbridos e laboratório de sensibilidade</summary>
+              <div class="body">Os híbridos ajustam a âncora REER pelo regime do dólar global e, opcionalmente, por um diferencial de produtividade. O laboratório estende essa lógica para CDS, carry, commodities e produtividade relativa. O objetivo é testar sensibilidade e organizar a discussão de cenário com transparência.</div>
+            </details>
+          </article>
+
+          <article class="panel">
+            <h3>Fontes e observações</h3>
+            <details class="note-box" open>
+              <summary>Dados observados</summary>
+              <div class="body">
+                <ul>
+                  <li>Spot BRL/USD mensal e anual: FRED / Board of Governors (EXBZUS).</li>
+                  <li>PTAX diária: Banco Central do Brasil.</li>
+                  <li>REER amplo do Brasil: BIS via FRED (RBBRBIS).</li>
+                  <li>Broad dollar / proxy de DXY: FRED (TWEXBGSMTH).</li>
+                  <li>Focus, Selic, Relatório de Política Monetária: Banco Central do Brasil.</li>
+                  <li>IPCA: IBGE.</li>
+                </ul>
+              </div>
+            </details>
+            <details class="note-box" open>
+              <summary>Como ler o material</summary>
+              <div class="body">O benchmark REER responde “onde está o real hoje”. O sinal tático responde “como o regime recente de mercado desloca o justo nominal”. O painel comparativo mostra dispersão entre famílias. Cenários, híbridos e laboratório respondem “o que pode acontecer se as hipóteses-chave mudarem”.</div>
+            </details>
+            <details class="note-box" open>
+              <summary>Limites conscientes</summary>
+              <div class="body">O componente de machine learning não é tratado como benchmark estrutural. Em câmbio, a robustez costuma ser maior quando a âncora de equilíbrio é mantida separada dos sinais táticos. Por isso o framework separa REER, sinal tático, painel comparativo e laboratório de sensibilidade.</div>
+            </details>
+          </article>
+        </div>
+
+        <div class="footer">
+          <strong>JERA Capital Research</strong> · material interativo de caráter informativo · abril 2026<br />
+          Sem recomendação de investimento. Base fechada com dados observados disponíveis até início de abril de 2026.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const DATA = {"core": {"meta": {"title": "JERA FX Strategy Dashboard", "subtitle": "BRL/USD 2026–2036", "asOf": "05 abr 2026", "author": "OpenAI for JERA"}, "current": {"ptaxDate": "02/04/2026", "ptaxSell": 5.1655, "ptaxBuy": 5.1649, "monthlyAvgDate": "Fev/2026", "monthlyAvgSpot": 5.1988, "reerDate": "Fev/2026", "reer": 111.67, "reerMedian": 121.64, "reerP25": 103.19, "reerP75": 141.28, "reerPercentile": 34.6, "fairMedian": 4.77, "fairLow": 4.11, "fairHigh": 5.63, "deviationVsFairMedianPct": 8.9, "selic": 14.75, "ipca12m": 3.81, "focus2026": 5.4, "focus2027": 5.45, "focus2028": 5.5, "focus2029": 5.5, "regimeLabel": "Dentro da banda, lado fraco"}, "history": [{"year": 2000, "spotEnd": 1.9632, "reer": 113.31, "spotAvg": 1.8301}, {"year": 2001, "spotEnd": 2.3635, "reer": 101.83, "spotAvg": 2.3527}, {"year": 2002, "spotEnd": 3.6268, "reer": 75.38, "spotAvg": 2.9213}, {"year": 2003, "spotEnd": 2.9255, "reer": 92.05, "spotAvg": 3.075}, {"year": 2004, "spotEnd": 2.715, "reer": 99.32, "spotAvg": 2.9262}, {"year": 2005, "spotEnd": 2.2809, "reer": 125.51, "spotAvg": 2.4352}, {"year": 2006, "spotEnd": 2.1476, "reer": 127.64, "spotAvg": 2.1738}, {"year": 2007, "spotEnd": 1.7852, "reer": 147.1, "spotAvg": 1.9461}, {"year": 2008, "spotEnd": 2.3954, "reer": 120.35, "spotAvg": 1.8326}, {"year": 2009, "spotEnd": 1.7508, "reer": 161.86, "spotAvg": 1.9976}, {"year": 2010, "spotEnd": 1.6955, "reer": 172.73, "spotAvg": 1.76}, {"year": 2011, "spotEnd": 1.8391, "reer": 164.78, "spotAvg": 1.6723}, {"year": 2012, "spotEnd": 2.0775, "reer": 149.87, "spotAvg": 1.9535}, {"year": 2013, "spotEnd": 2.3471, "reer": 141.35, "spotAvg": 2.157}, {"year": 2014, "spotEnd": 2.6419, "reer": 141.07, "spotAvg": 2.3512}, {"year": 2015, "spotEnd": 3.8808, "reer": 113.26, "spotAvg": 3.336}, {"year": 2016, "spotEnd": 3.354, "reer": 141.61, "spotAvg": 3.4839}, {"year": 2017, "spotEnd": 3.295, "reer": 137.14, "spotAvg": 3.191}, {"year": 2018, "spotEnd": 3.8834, "reer": 126.25, "spotAvg": 3.6513}, {"year": 2019, "spotEnd": 4.1045, "reer": 122.93, "spotAvg": 3.944}, {"year": 2020, "spotEnd": 5.1447, "reer": 98.4, "spotAvg": 5.1587}, {"year": 2021, "spotEnd": 5.6549, "reer": 95.95, "spotAvg": 5.3958}, {"year": 2022, "spotEnd": 5.2454, "reer": 107.25, "spotAvg": 5.1605}, {"year": 2023, "spotEnd": 4.8998, "reer": 118.89, "spotAvg": 4.9946}, {"year": 2024, "spotEnd": 6.101, "reer": 98.37, "spotAvg": 5.3872}, {"year": 2025, "spotEnd": 5.4557, "reer": 107.93, "spotAvg": 5.5891}, {"year": 2026, "spotEnd": 5.1655, "reer": 111.67, "spotAvg": null}], "recent": [{"month": "2024-01", "label": "Jan/24", "spot": 4.9182, "reer": 119.8}, {"month": "2024-02", "label": "Fev/24", "spot": 4.9609, "reer": 118.32}, {"month": "2024-03", "label": "Mar/24", "spot": 4.9798, "reer": 116.8}, {"month": "2024-04", "label": "Abr/24", "spot": 5.13, "reer": 114.04}, {"month": "2024-05", "label": "Mai/24", "spot": 5.1368, "reer": 113.52}, {"month": "2024-06", "label": "Jun/24", "spot": 5.3861, "reer": 108.9}, {"month": "2024-07", "label": "Jul/24", "spot": 5.5438, "reer": 105.52}, {"month": "2024-08", "label": "Ago/24", "spot": 5.5517, "reer": 103.75}, {"month": "2024-09", "label": "Set/24", "spot": 5.5378, "reer": 103.73}, {"month": "2024-10", "label": "Out/24", "spot": 5.6278, "reer": 103.68}, {"month": "2024-11", "label": "Nov/24", "spot": 5.7961, "reer": 102.33}, {"month": "2024-12", "label": "Dez/24", "spot": 6.101, "reer": 98.37}, {"month": "2025-01", "label": "Jan/25", "spot": 6.0109, "reer": 100.1}, {"month": "2025-02", "label": "Fev/25", "spot": 5.7638, "reer": 104.82}, {"month": "2025-03", "label": "Mar/25", "spot": 5.7581, "reer": 103.69}, {"month": "2025-04", "label": "Abr/25", "spot": 5.7905, "reer": 103.03}, {"month": "2025-05", "label": "Mai/25", "spot": 5.6664, "reer": 104.24}, {"month": "2025-06", "label": "Jun/25", "spot": 5.5458, "reer": 105.68}, {"month": "2025-07", "label": "Jul/25", "spot": 5.5332, "reer": 106.05}, {"month": "2025-08", "label": "Ago/25", "spot": 5.4455, "reer": 107.94}, {"month": "2025-09", "label": "Set/25", "spot": 5.363, "reer": 109.79}, {"month": "2025-10", "label": "Out/25", "spot": 5.3832, "reer": 109.8}, {"month": "2025-11", "label": "Nov/25", "spot": 5.3415, "reer": 110.98}, {"month": "2025-12", "label": "Dez/25", "spot": 5.4557, "reer": 107.93}, {"month": "2026-01", "label": "Jan/26", "spot": 5.3316, "reer": 109.64}, {"month": "2026-02", "label": "Fev/26", "spot": 5.1988, "reer": 111.67}], "scenarios": [{"id": "reform", "label": "Reforma + dólar mais fraco", "prob": 25, "color": "#22c55e", "desc": "Âncora fiscal, queda do prêmio de risco e dólar global menos pressionado. BRL volta a trabalhar na metade forte da banda estrutural.", "drivers": ["arcabouço fiscal crível", "queda do CDS", "Fed em easing sem choque de petróleo", "commodities estáveis"], "path": [5.17, 5.0, 4.85, 4.75, 4.7, 4.72, 4.78, 4.88, 5.0, 5.15, 5.4], "tenYear": 5.4, "risk": "o BRL forte não zera a tendência nominal de depreciação de muito longo prazo"}, {"id": "base", "label": "Base / prêmio sticky", "prob": 50, "color": "#c9a84c", "desc": "Sem crise clássica, mas com prêmio doméstico persistente e dólar global ainda dominante. O câmbio segue mais fraco do que o consenso estrutural.", "drivers": ["Focus perto de 5,4-5,5 no curto prazo", "carry ainda ajuda", "fiscal impede apreciação maior", "DXY sem colapso"], "path": [5.17, 5.4, 5.55, 5.6, 5.75, 5.85, 5.95, 6.05, 6.12, 6.2, 6.3], "tenYear": 6.3, "risk": "parece benigno em 12m, mas acumula depreciação nominal ao longo da década"}, {"id": "fiscal", "label": "Prêmio fiscal", "prob": 15, "color": "#ef4444", "desc": "Piora do regime fiscal e prêmio de risco mais alto. O BRL passa a negociar numa banda consistentemente mais fraca, mesmo sem ruptura externa.", "drivers": ["CDS acima de 200bps", "resultado primário decepciona", "inflação de serviços resiste", "menor espaço para queda de juros reais"], "path": [5.17, 5.8, 6.3, 6.7, 7.2, 7.55, 7.9, 8.2, 8.45, 8.7, 9.0], "tenYear": 9.0, "risk": "risco de overshooting pontual acima da trilha em eventos políticos"}, {"id": "superdollar", "label": "Super-dólar / EUA excepcional", "prob": 10, "color": "#f97316", "desc": "Produtividade e ativos americanos seguem dominando os fluxos globais. Mesmo um Brasil razoável opera com BRL estruturalmente mais fraco.", "drivers": ["DXY em regime alto", "equities/tech EUA puxando fluxos", "juros reais americanos persistentes", "China/commodities menos favoráveis"], "path": [5.17, 5.7, 6.4, 7.0, 7.6, 8.1, 8.6, 9.2, 9.6, 9.95, 10.3], "tenYear": 10.3, "risk": "principal cauda global não precificada quando o mercado olha só para o fiscal local"}], "scenarioSeries": [{"year": 2026, "reform": 5.17, "base": 5.17, "fiscal": 5.17, "superdollar": 5.17, "ev": 5.17, "low": 5.17, "high": 5.17}, {"year": 2027, "reform": 5.0, "base": 5.4, "fiscal": 5.8, "superdollar": 5.7, "ev": 5.39, "low": 5.0, "high": 5.8}, {"year": 2028, "reform": 4.85, "base": 5.55, "fiscal": 6.3, "superdollar": 6.4, "ev": 5.57, "low": 4.85, "high": 6.4}, {"year": 2029, "reform": 4.75, "base": 5.6, "fiscal": 6.7, "superdollar": 7.0, "ev": 5.69, "low": 4.75, "high": 7.0}, {"year": 2030, "reform": 4.7, "base": 5.75, "fiscal": 7.2, "superdollar": 7.6, "ev": 5.89, "low": 4.7, "high": 7.6}, {"year": 2031, "reform": 4.72, "base": 5.85, "fiscal": 7.55, "superdollar": 8.1, "ev": 6.05, "low": 4.72, "high": 8.1}, {"year": 2032, "reform": 4.78, "base": 5.95, "fiscal": 7.9, "superdollar": 8.6, "ev": 6.22, "low": 4.78, "high": 8.6}, {"year": 2033, "reform": 4.88, "base": 6.05, "fiscal": 8.2, "superdollar": 9.2, "ev": 6.39, "low": 4.88, "high": 9.2}, {"year": 2034, "reform": 5.0, "base": 6.12, "fiscal": 8.45, "superdollar": 9.6, "ev": 6.54, "low": 5.0, "high": 9.6}, {"year": 2035, "reform": 5.15, "base": 6.2, "fiscal": 8.7, "superdollar": 9.95, "ev": 6.69, "low": 5.15, "high": 9.95}, {"year": 2036, "reform": 5.4, "base": 6.3, "fiscal": 9.0, "superdollar": 10.3, "ev": 6.88, "low": 5.4, "high": 10.3}], "backtest": [{"horizon": 1, "hitRate": 54.5, "signals": 11}, {"horizon": 2, "hitRate": 60.0, "signals": 10}, {"horizon": 3, "hitRate": 60.0, "signals": 10}, {"horizon": 4, "hitRate": 70.0, "signals": 10}, {"horizon": 5, "hitRate": 66.7, "signals": 9}], "valuationHistory": [{"year": 2000, "spot": 1.9632, "fairMedian": 1.83, "fairLow": 1.57, "fairHigh": 2.16, "reer": 113.31}, {"year": 2001, "spot": 2.3635, "fairMedian": 1.98, "fairLow": 1.7, "fairHigh": 2.33, "reer": 101.83}, {"year": 2002, "spot": 3.6268, "fairMedian": 2.25, "fairLow": 1.94, "fairHigh": 2.65, "reer": 75.38}, {"year": 2003, "spot": 2.9255, "fairMedian": 2.21, "fairLow": 1.91, "fairHigh": 2.61, "reer": 92.05}, {"year": 2004, "spot": 2.715, "fairMedian": 2.22, "fairLow": 1.91, "fairHigh": 2.61, "reer": 99.32}, {"year": 2005, "spot": 2.2809, "fairMedian": 2.35, "fairLow": 2.03, "fairHigh": 2.77, "reer": 125.51}, {"year": 2006, "spot": 2.1476, "fairMedian": 2.25, "fairLow": 1.94, "fairHigh": 2.66, "reer": 127.64}, {"year": 2007, "spot": 1.7852, "fairMedian": 2.16, "fairLow": 1.86, "fairHigh": 2.54, "reer": 147.1}, {"year": 2008, "spot": 2.3954, "fairMedian": 2.37, "fairLow": 2.04, "fairHigh": 2.79, "reer": 120.35}, {"year": 2009, "spot": 1.7508, "fairMedian": 2.33, "fairLow": 2.01, "fairHigh": 2.75, "reer": 161.86}, {"year": 2010, "spot": 1.6955, "fairMedian": 2.41, "fairLow": 2.07, "fairHigh": 2.84, "reer": 172.73}, {"year": 2011, "spot": 1.8391, "fairMedian": 2.49, "fairLow": 2.15, "fairHigh": 2.94, "reer": 164.78}, {"year": 2012, "spot": 2.0775, "fairMedian": 2.56, "fairLow": 2.2, "fairHigh": 3.02, "reer": 149.87}, {"year": 2013, "spot": 2.3471, "fairMedian": 2.73, "fairLow": 2.35, "fairHigh": 3.22, "reer": 141.35}, {"year": 2014, "spot": 2.6419, "fairMedian": 3.06, "fairLow": 2.64, "fairHigh": 3.61, "reer": 141.07}, {"year": 2015, "spot": 3.8808, "fairMedian": 3.61, "fairLow": 3.11, "fairHigh": 4.26, "reer": 113.26}, {"year": 2016, "spot": 3.354, "fairMedian": 3.9, "fairLow": 3.36, "fairHigh": 4.6, "reer": 141.61}, {"year": 2017, "spot": 3.295, "fairMedian": 3.71, "fairLow": 3.2, "fairHigh": 4.38, "reer": 137.14}, {"year": 2018, "spot": 3.8834, "fairMedian": 4.03, "fairLow": 3.47, "fairHigh": 4.75, "reer": 126.25}, {"year": 2019, "spot": 4.1045, "fairMedian": 4.15, "fairLow": 3.57, "fairHigh": 4.89, "reer": 122.93}, {"year": 2020, "spot": 5.1447, "fairMedian": 4.16, "fairLow": 3.58, "fairHigh": 4.91, "reer": 98.4}, {"year": 2021, "spot": 5.6549, "fairMedian": 4.46, "fairLow": 3.84, "fairHigh": 5.26, "reer": 95.95}, {"year": 2022, "spot": 5.2454, "fairMedian": 4.62, "fairLow": 3.98, "fairHigh": 5.45, "reer": 107.25}, {"year": 2023, "spot": 4.8998, "fairMedian": 4.79, "fairLow": 4.12, "fairHigh": 5.65, "reer": 118.89}, {"year": 2024, "spot": 6.101, "fairMedian": 4.93, "fairLow": 4.25, "fairHigh": 5.82, "reer": 98.37}, {"year": 2025, "spot": 5.4557, "fairMedian": 4.84, "fairLow": 4.17, "fairHigh": 5.71, "reer": 107.93}, {"year": 2026, "spot": 5.1655, "fairMedian": 4.74, "fairLow": 4.08, "fairHigh": 5.59, "reer": 111.67}], "insights": [{"title": "O BRL não parece em extremo de crise", "body": "O REER de fev/26 está dentro da banda histórica 25-75 e abaixo da mediana de 2000-2025, sugerindo moeda fraca, mas não em overshooting tipo 2002."}, {"title": "Curto prazo é ruído; horizonte certo é regime", "body": "Sinais estruturais de REER têm pouco poder a 12m, mas o histórico melhora nos horizontes de 4-5 anos. Isso favorece cenário e regime, não target pontual agressivo."}, {"title": "Os 10 anos do BRL dependem de duas variáveis-mãe", "body": "O eixo mais importante é o regime do dólar global; o segundo é a credibilidade fiscal doméstica. A combinação dos dois define a banda nominal da próxima década."}], "sourceNotes": ["Spot BRL/USD mensal e anual: FRED / Board of Governors of the Federal Reserve System (EXBZUS, AEXBZUS).", "REER amplo do Brasil: BIS via FRED (RBBRBIS).", "PTAX e cotação diária: Banco Central do Brasil / Ipeadata.", "Focus, Selic e RPM: Banco Central do Brasil.", "Inflação IPCA: IBGE."], "backtestExamples": [{"year": 2002, "label": "2002 overshooting", "signal": "REER no extremo fraco", "oneYear": "spot caiu de 3.63 para 2.93 (-19%)", "fourYear": "spot caiu para 2.15 em 2006 (-41%)", "takeaway": "os extremos fracos tendem a normalizar, mas o timing de 12m é volátil"}, {"year": 2011, "label": "2011 BRL muito forte", "signal": "REER perto do topo histórico", "oneYear": "spot subiu de 1.84 para 2.08 (+13%)", "fourYear": "spot foi para 3.88 em 2015 (+111%)", "takeaway": "a sobrevalorização estrutural levou anos para corrigir e a correção veio grande"}, {"year": 2024, "label": "2024 repricing fiscal", "signal": "REER voltou para a metade fraca da distribuição", "oneYear": "spot caiu de 6.10 para 5.46 em 2025 (-11%)", "fourYear": "ainda não observável", "takeaway": "mesmo um BRL fraco não garante tendência linear; o que importa é o regime seguinte"}]}, "legacy": {"models": [{"id": "bm", "name": "PPP micro (cesta comparável)", "fair": 3.98, "rmse": 18.4, "color": "#ef4444", "cagr": 0.030138194350255887, "gapPctVsPtax": 29.8, "gapPctVsLegacySpot": 33.2}, {"id": "bma", "name": "PPP micro ajustado", "fair": 4.46, "rmse": 12.1, "color": "#f97316", "cagr": 0.03463071461206857, "gapPctVsPtax": 15.8, "gapPctVsLegacySpot": 18.8}, {"id": "ipc", "name": "PPP inflação relativa", "fair": 4.58, "rmse": 9.8, "color": "#eab308", "cagr": 0.03568104428703833, "gapPctVsPtax": 12.8, "gapPctVsLegacySpot": 15.7}, {"id": "bs", "name": "Produtividade relativa", "fair": 5.3, "rmse": 6.2, "color": "#22c55e", "cagr": 0.041476211564960286, "gapPctVsPtax": -2.5, "gapPctVsLegacySpot": 0.0}, {"id": "tot", "name": "Termos de troca", "fair": 5.28, "rmse": 5.1, "color": "#06b6d4", "cagr": 0.041325743471163356, "gapPctVsPtax": -2.2, "gapPctVsLegacySpot": 0.4}, {"id": "ulc", "name": "Custos unitários industriais", "fair": 5.68, "rmse": 7.8, "color": "#a78bfa", "cagr": 0.04423590248896292, "gapPctVsPtax": -9.1, "gapPctVsLegacySpot": -6.7}, {"id": "feer", "name": "Equilíbrio externo", "fair": 5.82, "rmse": 8.9, "color": "#ec4899", "cagr": 0.045208053976355744, "gapPctVsPtax": -11.2, "gapPctVsLegacySpot": -8.9}, {"id": "carry", "name": "Juros e risco", "fair": 6.15, "rmse": 11.3, "color": "#94a3b8", "cagr": 0.04741337571870918, "gapPctVsPtax": -16.0, "gapPctVsLegacySpot": -13.8}, {"id": "jera", "name": "Composite macro-finance", "fair": 5.07, "rmse": 4.8, "color": "#c9a84c", "cagr": 0.039711868105611225, "gapPctVsPtax": 1.9, "gapPctVsLegacySpot": 4.5}], "monthly": [{"t": 2000.0, "act": 1.83, "bm": 1.83, "bma": 1.83, "ipc": 1.83, "bs": 1.83, "tot": 1.83, "ulc": 1.83, "feer": 1.83, "carry": 1.83, "jera": 1.83, "consW": 1.83}, {"t": 2000.0833, "act": 1.84, "bm": 1.83, "bma": 1.84, "ipc": 1.84, "bs": 1.84, "tot": 1.84, "ulc": 1.84, "feer": 1.84, "carry": 1.84, "jera": 1.84, "consW": 1.84}, {"t": 2000.1667, "act": 1.85, "bm": 1.84, "bma": 1.84, "ipc": 1.84, "bs": 1.84, "tot": 1.84, "ulc": 1.84, "feer": 1.84, "carry": 1.84, "jera": 1.84, "consW": 1.84}, {"t": 2000.25, "act": 1.86, "bm": 1.84, "bma": 1.85, "ipc": 1.85, "bs": 1.85, "tot": 1.85, "ulc": 1.85, "feer": 1.85, "carry": 1.85, "jera": 1.85, "consW": 1.85}, {"t": 2000.3333, "act": 1.88, "bm": 1.85, "bma": 1.85, "ipc": 1.85, "bs": 1.85, "tot": 1.85, "ulc": 1.86, "feer": 1.86, "carry": 1.86, "jera": 1.85, "consW": 1.85}, {"t": 2000.4167, "act": 1.89, "bm": 1.85, "bma": 1.86, "ipc": 1.86, "bs": 1.86, "tot": 1.86, "ulc": 1.86, "feer": 1.86, "carry": 1.87, "jera": 1.86, "consW": 1.86}, {"t": 2000.5, "act": 1.9, "bm": 1.86, "bma": 1.86, "ipc": 1.86, "bs": 1.87, "tot": 1.87, "ulc": 1.87, "feer": 1.87, "carry": 1.87, "jera": 1.87, "consW": 1.87}, {"t": 2000.5833, "act": 1.91, "bm": 1.86, "bma": 1.87, "ipc": 1.87, "bs": 1.87, "tot": 1.87, "ulc": 1.88, "feer": 1.88, "carry": 1.88, "jera": 1.87, "consW": 1.87}, {"t": 2000.6667, "act": 1.92, "bm": 1.87, "bma": 1.87, "ipc": 1.87, "bs": 1.88, "tot": 1.88, "ulc": 1.88, "feer": 1.88, "carry": 1.89, "jera": 1.88, "consW": 1.88}, {"t": 2000.75, "act": 1.94, "bm": 1.87, "bma": 1.88, "ipc": 1.88, "bs": 1.89, "tot": 1.89, "ulc": 1.89, "feer": 1.89, "carry": 1.89, "jera": 1.88, "consW": 1.89}, {"t": 2000.8333, "act": 1.95, "bm": 1.88, "bma": 1.88, "ipc": 1.88, "bs": 1.89, "tot": 1.89, "ulc": 1.9, "feer": 1.9, "carry": 1.9, "jera": 1.89, "consW": 1.89}, {"t": 2000.9167, "act": 1.96, "bm": 1.88, "bma": 1.89, "ipc": 1.89, "bs": 1.9, "tot": 1.9, "ulc": 1.9, "feer": 1.91, "carry": 1.91, "jera": 1.9, "consW": 1.9}, {"t": 2001.0, "act": 1.97, "bm": 1.89, "bma": 1.89, "ipc": 1.9, "bs": 1.91, "tot": 1.91, "ulc": 1.91, "feer": 1.91, "carry": 1.92, "jera": 1.9, "consW": 1.91}, {"t": 2001.0833, "act": 2.06, "bm": 1.89, "bma": 1.9, "ipc": 1.9, "bs": 1.91, "tot": 1.91, "ulc": 1.92, "feer": 1.92, "carry": 1.92, "jera": 1.91, "consW": 1.91}, {"t": 2001.1667, "act": 2.15, "bm": 1.89, "bma": 1.9, "ipc": 1.91, "bs": 1.92, "tot": 1.92, "ulc": 1.92, "feer": 1.93, "carry": 1.93, "jera": 1.92, "consW": 1.92}, {"t": 2001.25, "act": 2.23, "bm": 1.9, "bma": 1.91, "ipc": 1.91, "bs": 1.93, "tot": 1.93, "ulc": 1.93, "feer": 1.93, "carry": 1.94, "jera": 1.92, "consW": 1.92}, {"t": 2001.3333, "act": 2.32, "bm": 1.9, "bma": 1.91, "ipc": 1.92, "bs": 1.93, "tot": 1.93, "ulc": 1.94, "feer": 1.94, "carry": 1.95, "jera": 1.93, "consW": 1.93}, {"t": 2001.4167, "act": 2.41, "bm": 1.91, "bma": 1.92, "ipc": 1.92, "bs": 1.94, "tot": 1.94, "ulc": 1.95, "feer": 1.95, "carry": 1.95, "jera": 1.93, "consW": 1.94}, {"t": 2001.5, "act": 2.49, "bm": 1.91, "bma": 1.93, "ipc": 1.93, "bs": 1.95, "tot": 1.94, "ulc": 1.95, "feer": 1.96, "carry": 1.96, "jera": 1.94, "consW": 1.94}, {"t": 2001.5833, "act": 2.58, "bm": 1.92, "bma": 1.93, "ipc": 1.93, "bs": 1.95, "tot": 1.95, "ulc": 1.96, "feer": 1.96, "carry": 1.97, "jera": 1.95, "consW": 1.95}, {"t": 2001.6667, "act": 2.67, "bm": 1.92, "bma": 1.94, "ipc": 1.94, "bs": 1.96, "tot": 1.96, "ulc": 1.97, "feer": 1.97, "carry": 1.98, "jera": 1.95, "consW": 1.96}, {"t": 2001.75, "act": 2.62, "bm": 1.93, "bma": 1.94, "ipc": 1.95, "bs": 1.96, "tot": 1.96, "ulc": 1.97, "feer": 1.98, "carry": 1.98, "jera": 1.96, "consW": 1.96}, {"t": 2001.8333, "act": 2.56, "bm": 1.93, "bma": 1.95, "ipc": 1.95, "bs": 1.97, "tot": 1.97, "ulc": 1.98, "feer": 1.98, "carry": 1.99, "jera": 1.97, "consW": 1.97}, {"t": 2001.9167, "act": 2.51, "bm": 1.94, "bma": 1.95, "ipc": 1.96, "bs": 1.98, "tot": 1.98, "ulc": 1.99, "feer": 1.99, "carry": 2.0, "jera": 1.97, "consW": 1.98}, {"t": 2002.0, "act": 2.46, "bm": 1.94, "bma": 1.96, "ipc": 1.96, "bs": 1.98, "tot": 1.98, "ulc": 2.0, "feer": 2.0, "carry": 2.01, "jera": 1.98, "consW": 1.98}, {"t": 2002.0833, "act": 2.4, "bm": 1.95, "bma": 1.96, "ipc": 1.97, "bs": 1.99, "tot": 1.99, "ulc": 2.0, "feer": 2.01, "carry": 2.02, "jera": 1.98, "consW": 1.99}, {"t": 2002.1667, "act": 2.35, "bm": 1.95, "bma": 1.97, "ipc": 1.97, "bs": 2.0, "tot": 2.0, "ulc": 2.01, "feer": 2.01, "carry": 2.02, "jera": 1.99, "consW": 1.99}, {"t": 2002.25, "act": 2.57, "bm": 1.96, "bma": 1.98, "ipc": 1.98, "bs": 2.01, "tot": 2.0, "ulc": 2.02, "feer": 2.02, "carry": 2.03, "jera": 2.0, "consW": 2.0}, {"t": 2002.3333, "act": 2.79, "bm": 1.96, "bma": 1.98, "ipc": 1.99, "bs": 2.01, "tot": 2.01, "ulc": 2.02, "feer": 2.03, "carry": 2.04, "jera": 2.0, "consW": 2.01}, {"t": 2002.4167, "act": 3.01, "bm": 1.97, "bma": 1.99, "ipc": 1.99, "bs": 2.02, "tot": 2.02, "ulc": 2.03, "feer": 2.04, "carry": 2.05, "jera": 2.01, "consW": 2.02}, {"t": 2002.5, "act": 3.22, "bm": 1.97, "bma": 1.99, "ipc": 2.0, "bs": 2.03, "tot": 2.02, "ulc": 2.04, "feer": 2.04, "carry": 2.05, "jera": 2.02, "consW": 2.02}, {"t": 2002.5833, "act": 3.44, "bm": 1.98, "bma": 2.0, "ipc": 2.0, "bs": 2.03, "tot": 2.03, "ulc": 2.05, "feer": 2.05, "carry": 2.06, "jera": 2.02, "consW": 2.03}, {"t": 2002.6667, "act": 3.66, "bm": 1.98, "bma": 2.0, "ipc": 2.01, "bs": 2.04, "tot": 2.04, "ulc": 2.05, "feer": 2.06, "carry": 2.07, "jera": 2.03, "consW": 2.04}, {"t": 2002.75, "act": 3.88, "bm": 1.99, "bma": 2.01, "ipc": 2.02, "bs": 2.05, "tot": 2.05, "ulc": 2.06, "feer": 2.07, "carry": 2.08, "jera": 2.04, "consW": 2.05}, {"t": 2002.8333, "act": 3.77, "bm": 1.99, "bma": 2.02, "ipc": 2.02, "bs": 2.05, "tot": 2.05, "ulc": 2.07, "feer": 2.07, "carry": 2.09, "jera": 2.04, "consW": 2.05}, {"t": 2002.9167, "act": 3.67, "bm": 2.0, "bma": 2.02, "ipc": 2.03, "bs": 2.06, "tot": 2.06, "ulc": 2.08, "feer": 2.08, "carry": 2.09, "jera": 2.05, "consW": 2.06}, {"t": 2003.0, "act": 3.56, "bm": 2.0, "bma": 2.03, "ipc": 2.03, "bs": 2.07, "tot": 2.07, "ulc": 2.08, "feer": 2.09, "carry": 2.1, "jera": 2.06, "consW": 2.06}, {"t": 2003.0833, "act": 3.46, "bm": 2.01, "bma": 2.03, "ipc": 2.04, "bs": 2.07, "tot": 2.07, "ulc": 2.09, "feer": 2.1, "carry": 2.11, "jera": 2.06, "consW": 2.07}, {"t": 2003.1667, "act": 3.35, "bm": 2.01, "bma": 2.04, "ipc": 2.04, "bs": 2.08, "tot": 2.08, "ulc": 2.1, "feer": 2.11, "carry": 2.12, "jera": 2.07, "consW": 2.08}, {"t": 2003.25, "act": 3.3, "bm": 2.02, "bma": 2.04, "ipc": 2.05, "bs": 2.09, "tot": 2.09, "ulc": 2.11, "feer": 2.11, "carry": 2.13, "jera": 2.08, "consW": 2.08}, {"t": 2003.3333, "act": 3.25, "bm": 2.02, "bma": 2.05, "ipc": 2.06, "bs": 2.1, "tot": 2.09, "ulc": 2.11, "feer": 2.12, "carry": 2.14, "jera": 2.08, "consW": 2.09}, {"t": 2003.4167, "act": 3.21, "bm": 2.03, "bma": 2.06, "ipc": 2.06, "bs": 2.1, "tot": 2.1, "ulc": 2.12, "feer": 2.13, "carry": 2.14, "jera": 2.09, "consW": 2.1}, {"t": 2003.5, "act": 3.16, "bm": 2.03, "bma": 2.06, "ipc": 2.07, "bs": 2.11, "tot": 2.11, "ulc": 2.13, "feer": 2.14, "carry": 2.15, "jera": 2.1, "consW": 2.11}, {"t": 2003.5833, "act": 3.11, "bm": 2.04, "bma": 2.07, "ipc": 2.07, "bs": 2.12, "tot": 2.12, "ulc": 2.14, "feer": 2.14, "carry": 2.16, "jera": 2.1, "consW": 2.11}, {"t": 2003.6667, "act": 3.06, "bm": 2.04, "bma": 2.07, "ipc": 2.08, "bs": 2.12, "tot": 2.12, "ulc": 2.14, "feer": 2.15, "carry": 2.17, "jera": 2.11, "consW": 2.12}, {"t": 2003.75, "act": 3.02, "bm": 2.05, "bma": 2.08, "ipc": 2.09, "bs": 2.13, "tot": 2.13, "ulc": 2.15, "feer": 2.16, "carry": 2.18, "jera": 2.12, "consW": 2.13}, {"t": 2003.8333, "act": 2.97, "bm": 2.05, "bma": 2.09, "ipc": 2.09, "bs": 2.14, "tot": 2.14, "ulc": 2.16, "feer": 2.17, "carry": 2.19, "jera": 2.12, "consW": 2.13}, {"t": 2003.9167, "act": 2.92, "bm": 2.06, "bma": 2.09, "ipc": 2.1, "bs": 2.15, "tot": 2.14, "ulc": 2.17, "feer": 2.18, "carry": 2.19, "jera": 2.13, "consW": 2.14}, {"t": 2004.0, "act": 2.95, "bm": 2.06, "bma": 2.1, "ipc": 2.11, "bs": 2.15, "tot": 2.15, "ulc": 2.18, "feer": 2.18, "carry": 2.2, "jera": 2.14, "consW": 2.15}, {"t": 2004.0833, "act": 2.98, "bm": 2.07, "bma": 2.1, "ipc": 2.11, "bs": 2.16, "tot": 2.16, "ulc": 2.18, "feer": 2.19, "carry": 2.21, "jera": 2.15, "consW": 2.15}, {"t": 2004.1667, "act": 3.01, "bm": 2.07, "bma": 2.11, "ipc": 2.12, "bs": 2.17, "tot": 2.17, "ulc": 2.19, "feer": 2.2, "carry": 2.22, "jera": 2.15, "consW": 2.16}, {"t": 2004.25, "act": 3.04, "bm": 2.08, "bma": 2.11, "ipc": 2.12, "bs": 2.18, "tot": 2.17, "ulc": 2.2, "feer": 2.21, "carry": 2.23, "jera": 2.16, "consW": 2.17}, {"t": 2004.3333, "act": 3.07, "bm": 2.08, "bma": 2.12, "ipc": 2.13, "bs": 2.18, "tot": 2.18, "ulc": 2.21, "feer": 2.22, "carry": 2.24, "jera": 2.17, "consW": 2.18}, {"t": 2004.4167, "act": 3.1, "bm": 2.09, "bma": 2.13, "ipc": 2.14, "bs": 2.19, "tot": 2.19, "ulc": 2.22, "feer": 2.22, "carry": 2.25, "jera": 2.17, "consW": 2.18}, {"t": 2004.5, "act": 3.04, "bm": 2.09, "bma": 2.13, "ipc": 2.14, "bs": 2.2, "tot": 2.2, "ulc": 2.22, "feer": 2.23, "carry": 2.25, "jera": 2.18, "consW": 2.19}, {"t": 2004.5833, "act": 2.98, "bm": 2.1, "bma": 2.14, "ipc": 2.15, "bs": 2.2, "tot": 2.2, "ulc": 2.23, "feer": 2.24, "carry": 2.26, "jera": 2.19, "consW": 2.2}, {"t": 2004.6667, "act": 2.92, "bm": 2.1, "bma": 2.15, "ipc": 2.16, "bs": 2.21, "tot": 2.21, "ulc": 2.24, "feer": 2.25, "carry": 2.27, "jera": 2.19, "consW": 2.2}, {"t": 2004.75, "act": 2.86, "bm": 2.11, "bma": 2.15, "ipc": 2.16, "bs": 2.22, "tot": 2.22, "ulc": 2.25, "feer": 2.26, "carry": 2.28, "jera": 2.2, "consW": 2.21}, {"t": 2004.8333, "act": 2.8, "bm": 2.11, "bma": 2.16, "ipc": 2.17, "bs": 2.23, "tot": 2.23, "ulc": 2.26, "feer": 2.27, "carry": 2.29, "jera": 2.21, "consW": 2.22}, {"t": 2004.9167, "act": 2.74, "bm": 2.12, "bma": 2.16, "ipc": 2.17, "bs": 2.23, "tot": 2.23, "ulc": 2.26, "feer": 2.27, "carry": 2.3, "jera": 2.22, "consW": 2.23}, {"t": 2005.0, "act": 2.69, "bm": 2.12, "bma": 2.17, "ipc": 2.18, "bs": 2.24, "tot": 2.24, "ulc": 2.27, "feer": 2.28, "carry": 2.31, "jera": 2.22, "consW": 2.23}, {"t": 2005.0833, "act": 2.63, "bm": 2.13, "bma": 2.18, "ipc": 2.19, "bs": 2.25, "tot": 2.25, "ulc": 2.28, "feer": 2.29, "carry": 2.32, "jera": 2.23, "consW": 2.24}, {"t": 2005.1667, "act": 2.58, "bm": 2.13, "bma": 2.18, "ipc": 2.19, "bs": 2.26, "tot": 2.26, "ulc": 2.29, "feer": 2.3, "carry": 2.32, "jera": 2.24, "consW": 2.25}, {"t": 2005.25, "act": 2.53, "bm": 2.14, "bma": 2.19, "ipc": 2.2, "bs": 2.27, "tot": 2.26, "ulc": 2.3, "feer": 2.31, "carry": 2.33, "jera": 2.25, "consW": 2.26}, {"t": 2005.3333, "act": 2.47, "bm": 2.14, "bma": 2.19, "ipc": 2.21, "bs": 2.27, "tot": 2.27, "ulc": 2.31, "feer": 2.32, "carry": 2.34, "jera": 2.25, "consW": 2.26}, {"t": 2005.4167, "act": 2.42, "bm": 2.15, "bma": 2.2, "ipc": 2.21, "bs": 2.28, "tot": 2.28, "ulc": 2.31, "feer": 2.33, "carry": 2.35, "jera": 2.26, "consW": 2.27}, {"t": 2005.5, "act": 2.41, "bm": 2.15, "bma": 2.21, "ipc": 2.22, "bs": 2.29, "tot": 2.29, "ulc": 2.32, "feer": 2.33, "carry": 2.36, "jera": 2.27, "consW": 2.28}, {"t": 2005.5833, "act": 2.39, "bm": 2.16, "bma": 2.21, "ipc": 2.23, "bs": 2.3, "tot": 2.29, "ulc": 2.33, "feer": 2.34, "carry": 2.37, "jera": 2.27, "consW": 2.29}, {"t": 2005.6667, "act": 2.38, "bm": 2.17, "bma": 2.22, "ipc": 2.23, "bs": 2.3, "tot": 2.3, "ulc": 2.34, "feer": 2.35, "carry": 2.38, "jera": 2.28, "consW": 2.29}, {"t": 2005.75, "act": 2.37, "bm": 2.17, "bma": 2.23, "ipc": 2.24, "bs": 2.31, "tot": 2.31, "ulc": 2.35, "feer": 2.36, "carry": 2.39, "jera": 2.29, "consW": 2.3}, {"t": 2005.8333, "act": 2.35, "bm": 2.18, "bma": 2.23, "ipc": 2.25, "bs": 2.32, "tot": 2.32, "ulc": 2.36, "feer": 2.37, "carry": 2.4, "jera": 2.3, "consW": 2.31}, {"t": 2005.9167, "act": 2.34, "bm": 2.18, "bma": 2.24, "ipc": 2.25, "bs": 2.33, "tot": 2.33, "ulc": 2.36, "feer": 2.38, "carry": 2.41, "jera": 2.3, "consW": 2.32}, {"t": 2006.0, "act": 2.31, "bm": 2.19, "bma": 2.24, "ipc": 2.26, "bs": 2.34, "tot": 2.33, "ulc": 2.37, "feer": 2.39, "carry": 2.42, "jera": 2.31, "consW": 2.33}, {"t": 2006.0833, "act": 2.29, "bm": 2.19, "bma": 2.25, "ipc": 2.27, "bs": 2.34, "tot": 2.34, "ulc": 2.38, "feer": 2.39, "carry": 2.43, "jera": 2.32, "consW": 2.33}, {"t": 2006.1667, "act": 2.26, "bm": 2.2, "bma": 2.26, "ipc": 2.27, "bs": 2.35, "tot": 2.35, "ulc": 2.39, "feer": 2.4, "carry": 2.44, "jera": 2.33, "consW": 2.34}, {"t": 2006.25, "act": 2.23, "bm": 2.2, "bma": 2.26, "ipc": 2.28, "bs": 2.36, "tot": 2.36, "ulc": 2.4, "feer": 2.41, "carry": 2.44, "jera": 2.33, "consW": 2.35}, {"t": 2006.3333, "act": 2.21, "bm": 2.21, "bma": 2.27, "ipc": 2.28, "bs": 2.37, "tot": 2.37, "ulc": 2.41, "feer": 2.42, "carry": 2.45, "jera": 2.34, "consW": 2.36}, {"t": 2006.4167, "act": 2.18, "bm": 2.21, "bma": 2.28, "ipc": 2.29, "bs": 2.38, "tot": 2.37, "ulc": 2.42, "feer": 2.43, "carry": 2.46, "jera": 2.35, "consW": 2.36}, {"t": 2006.5, "act": 2.18, "bm": 2.22, "bma": 2.28, "ipc": 2.3, "bs": 2.38, "tot": 2.38, "ulc": 2.42, "feer": 2.44, "carry": 2.47, "jera": 2.36, "consW": 2.37}, {"t": 2006.5833, "act": 2.17, "bm": 2.23, "bma": 2.29, "ipc": 2.31, "bs": 2.39, "tot": 2.39, "ulc": 2.43, "feer": 2.45, "carry": 2.48, "jera": 2.36, "consW": 2.38}, {"t": 2006.6667, "act": 2.17, "bm": 2.23, "bma": 2.3, "ipc": 2.31, "bs": 2.4, "tot": 2.4, "ulc": 2.44, "feer": 2.46, "carry": 2.49, "jera": 2.37, "consW": 2.39}, {"t": 2006.75, "act": 2.16, "bm": 2.24, "bma": 2.3, "ipc": 2.32, "bs": 2.41, "tot": 2.41, "ulc": 2.45, "feer": 2.47, "carry": 2.5, "jera": 2.38, "consW": 2.4}, {"t": 2006.8333, "act": 2.16, "bm": 2.24, "bma": 2.31, "ipc": 2.33, "bs": 2.42, "tot": 2.41, "ulc": 2.46, "feer": 2.48, "carry": 2.51, "jera": 2.39, "consW": 2.41}, {"t": 2006.9167, "act": 2.15, "bm": 2.25, "bma": 2.32, "ipc": 2.33, "bs": 2.42, "tot": 2.42, "ulc": 2.47, "feer": 2.48, "carry": 2.52, "jera": 2.4, "consW": 2.41}, {"t": 2007.0, "act": 2.11, "bm": 2.25, "bma": 2.32, "ipc": 2.34, "bs": 2.43, "tot": 2.43, "ulc": 2.48, "feer": 2.49, "carry": 2.53, "jera": 2.4, "consW": 2.42}, {"t": 2007.0833, "act": 2.08, "bm": 2.26, "bma": 2.33, "ipc": 2.35, "bs": 2.44, "tot": 2.44, "ulc": 2.49, "feer": 2.5, "carry": 2.54, "jera": 2.41, "consW": 2.43}, {"t": 2007.1667, "act": 2.04, "bm": 2.26, "bma": 2.34, "ipc": 2.35, "bs": 2.45, "tot": 2.45, "ulc": 2.5, "feer": 2.51, "carry": 2.55, "jera": 2.42, "consW": 2.44}, {"t": 2007.25, "act": 2.0, "bm": 2.27, "bma": 2.34, "ipc": 2.36, "bs": 2.46, "tot": 2.45, "ulc": 2.5, "feer": 2.52, "carry": 2.56, "jera": 2.43, "consW": 2.44}, {"t": 2007.3333, "act": 1.97, "bm": 2.28, "bma": 2.35, "ipc": 2.37, "bs": 2.47, "tot": 2.46, "ulc": 2.51, "feer": 2.53, "carry": 2.57, "jera": 2.43, "consW": 2.45}, {"t": 2007.4167, "act": 1.93, "bm": 2.28, "bma": 2.36, "ipc": 2.37, "bs": 2.47, "tot": 2.47, "ulc": 2.52, "feer": 2.54, "carry": 2.58, "jera": 2.44, "consW": 2.46}, {"t": 2007.5, "act": 1.9, "bm": 2.29, "bma": 2.36, "ipc": 2.38, "bs": 2.48, "tot": 2.48, "ulc": 2.53, "feer": 2.55, "carry": 2.59, "jera": 2.45, "consW": 2.47}, {"t": 2007.5833, "act": 1.88, "bm": 2.29, "bma": 2.37, "ipc": 2.39, "bs": 2.49, "tot": 2.49, "ulc": 2.54, "feer": 2.56, "carry": 2.6, "jera": 2.46, "consW": 2.48}, {"t": 2007.6667, "act": 1.85, "bm": 2.3, "bma": 2.38, "ipc": 2.39, "bs": 2.5, "tot": 2.5, "ulc": 2.55, "feer": 2.57, "carry": 2.61, "jera": 2.47, "consW": 2.49}, {"t": 2007.75, "act": 1.82, "bm": 2.3, "bma": 2.38, "ipc": 2.4, "bs": 2.51, "tot": 2.5, "ulc": 2.56, "feer": 2.58, "carry": 2.62, "jera": 2.47, "consW": 2.49}, {"t": 2007.8333, "act": 1.8, "bm": 2.31, "bma": 2.39, "ipc": 2.41, "bs": 2.52, "tot": 2.51, "ulc": 2.57, "feer": 2.59, "carry": 2.63, "jera": 2.48, "consW": 2.5}, {"t": 2007.9167, "act": 1.77, "bm": 2.31, "bma": 2.4, "ipc": 2.42, "bs": 2.52, "tot": 2.52, "ulc": 2.58, "feer": 2.6, "carry": 2.64, "jera": 2.49, "consW": 2.51}, {"t": 2008.0, "act": 1.75, "bm": 2.32, "bma": 2.4, "ipc": 2.42, "bs": 2.53, "tot": 2.53, "ulc": 2.59, "feer": 2.61, "carry": 2.65, "jera": 2.5, "consW": 2.52}, {"t": 2008.0833, "act": 1.72, "bm": 2.33, "bma": 2.41, "ipc": 2.43, "bs": 2.54, "tot": 2.54, "ulc": 2.6, "feer": 2.62, "carry": 2.66, "jera": 2.51, "consW": 2.53}, {"t": 2008.1667, "act": 1.7, "bm": 2.33, "bma": 2.42, "ipc": 2.44, "bs": 2.55, "tot": 2.55, "ulc": 2.61, "feer": 2.63, "carry": 2.67, "jera": 2.52, "consW": 2.54}, {"t": 2008.25, "act": 1.68, "bm": 2.34, "bma": 2.42, "ipc": 2.44, "bs": 2.56, "tot": 2.56, "ulc": 2.62, "feer": 2.64, "carry": 2.68, "jera": 2.52, "consW": 2.55}, {"t": 2008.3333, "act": 1.65, "bm": 2.34, "bma": 2.43, "ipc": 2.45, "bs": 2.57, "tot": 2.56, "ulc": 2.62, "feer": 2.65, "carry": 2.69, "jera": 2.53, "consW": 2.55}, {"t": 2008.4167, "act": 1.63, "bm": 2.35, "bma": 2.44, "ipc": 2.46, "bs": 2.58, "tot": 2.57, "ulc": 2.63, "feer": 2.66, "carry": 2.7, "jera": 2.54, "consW": 2.56}, {"t": 2008.5, "act": 1.6, "bm": 2.36, "bma": 2.44, "ipc": 2.47, "bs": 2.59, "tot": 2.58, "ulc": 2.64, "feer": 2.66, "carry": 2.71, "jera": 2.55, "consW": 2.57}, {"t": 2008.5833, "act": 1.58, "bm": 2.36, "bma": 2.45, "ipc": 2.47, "bs": 2.59, "tot": 2.59, "ulc": 2.65, "feer": 2.67, "carry": 2.72, "jera": 2.56, "consW": 2.58}, {"t": 2008.6667, "act": 1.77, "bm": 2.37, "bma": 2.46, "ipc": 2.48, "bs": 2.6, "tot": 2.6, "ulc": 2.66, "feer": 2.68, "carry": 2.73, "jera": 2.56, "consW": 2.59}, {"t": 2008.75, "act": 1.96, "bm": 2.37, "bma": 2.47, "ipc": 2.49, "bs": 2.61, "tot": 2.61, "ulc": 2.67, "feer": 2.69, "carry": 2.74, "jera": 2.57, "consW": 2.6}, {"t": 2008.8333, "act": 2.15, "bm": 2.38, "bma": 2.47, "ipc": 2.49, "bs": 2.62, "tot": 2.62, "ulc": 2.68, "feer": 2.7, "carry": 2.76, "jera": 2.58, "consW": 2.6}, {"t": 2008.9167, "act": 2.34, "bm": 2.38, "bma": 2.48, "ipc": 2.5, "bs": 2.63, "tot": 2.63, "ulc": 2.69, "feer": 2.71, "carry": 2.77, "jera": 2.59, "consW": 2.61}, {"t": 2009.0, "act": 2.33, "bm": 2.39, "bma": 2.49, "ipc": 2.51, "bs": 2.64, "tot": 2.63, "ulc": 2.7, "feer": 2.72, "carry": 2.78, "jera": 2.6, "consW": 2.62}, {"t": 2009.0833, "act": 2.33, "bm": 2.4, "bma": 2.49, "ipc": 2.52, "bs": 2.65, "tot": 2.64, "ulc": 2.71, "feer": 2.73, "carry": 2.79, "jera": 2.61, "consW": 2.63}, {"t": 2009.1667, "act": 2.32, "bm": 2.4, "bma": 2.5, "ipc": 2.52, "bs": 2.66, "tot": 2.65, "ulc": 2.72, "feer": 2.74, "carry": 2.8, "jera": 2.62, "consW": 2.64}, {"t": 2009.25, "act": 2.25, "bm": 2.41, "bma": 2.51, "ipc": 2.53, "bs": 2.67, "tot": 2.66, "ulc": 2.73, "feer": 2.75, "carry": 2.81, "jera": 2.62, "consW": 2.65}, {"t": 2009.3333, "act": 2.17, "bm": 2.41, "bma": 2.51, "ipc": 2.54, "bs": 2.67, "tot": 2.67, "ulc": 2.74, "feer": 2.76, "carry": 2.82, "jera": 2.63, "consW": 2.66}, {"t": 2009.4167, "act": 2.09, "bm": 2.42, "bma": 2.52, "ipc": 2.55, "bs": 2.68, "tot": 2.68, "ulc": 2.75, "feer": 2.78, "carry": 2.83, "jera": 2.64, "consW": 2.67}, {"t": 2009.5, "act": 2.02, "bm": 2.43, "bma": 2.53, "ipc": 2.55, "bs": 2.69, "tot": 2.69, "ulc": 2.76, "feer": 2.79, "carry": 2.84, "jera": 2.65, "consW": 2.68}, {"t": 2009.5833, "act": 1.95, "bm": 2.43, "bma": 2.54, "ipc": 2.56, "bs": 2.7, "tot": 2.7, "ulc": 2.77, "feer": 2.8, "carry": 2.85, "jera": 2.66, "consW": 2.68}, {"t": 2009.6667, "act": 1.87, "bm": 2.44, "bma": 2.54, "ipc": 2.57, "bs": 2.71, "tot": 2.71, "ulc": 2.78, "feer": 2.81, "carry": 2.86, "jera": 2.67, "consW": 2.69}, {"t": 2009.75, "act": 1.83, "bm": 2.44, "bma": 2.55, "ipc": 2.58, "bs": 2.72, "tot": 2.72, "ulc": 2.79, "feer": 2.82, "carry": 2.87, "jera": 2.68, "consW": 2.7}, {"t": 2009.8333, "act": 1.78, "bm": 2.45, "bma": 2.56, "ipc": 2.58, "bs": 2.73, "tot": 2.73, "ulc": 2.8, "feer": 2.83, "carry": 2.89, "jera": 2.68, "consW": 2.71}, {"t": 2009.9167, "act": 1.74, "bm": 2.46, "bma": 2.56, "ipc": 2.59, "bs": 2.74, "tot": 2.73, "ulc": 2.81, "feer": 2.84, "carry": 2.9, "jera": 2.69, "consW": 2.72}, {"t": 2010.0, "act": 1.74, "bm": 2.46, "bma": 2.57, "ipc": 2.6, "bs": 2.75, "tot": 2.74, "ulc": 2.82, "feer": 2.85, "carry": 2.91, "jera": 2.7, "consW": 2.73}, {"t": 2010.0833, "act": 1.75, "bm": 2.47, "bma": 2.58, "ipc": 2.61, "bs": 2.76, "tot": 2.75, "ulc": 2.83, "feer": 2.86, "carry": 2.92, "jera": 2.71, "consW": 2.74}, {"t": 2010.1667, "act": 1.75, "bm": 2.47, "bma": 2.59, "ipc": 2.61, "bs": 2.77, "tot": 2.76, "ulc": 2.84, "feer": 2.87, "carry": 2.93, "jera": 2.72, "consW": 2.75}, {"t": 2010.25, "act": 1.76, "bm": 2.48, "bma": 2.59, "ipc": 2.62, "bs": 2.78, "tot": 2.77, "ulc": 2.85, "feer": 2.88, "carry": 2.94, "jera": 2.73, "consW": 2.76}, {"t": 2010.3333, "act": 1.76, "bm": 2.49, "bma": 2.6, "ipc": 2.63, "bs": 2.79, "tot": 2.78, "ulc": 2.86, "feer": 2.89, "carry": 2.95, "jera": 2.74, "consW": 2.77}, {"t": 2010.4167, "act": 1.77, "bm": 2.49, "bma": 2.61, "ipc": 2.64, "bs": 2.79, "tot": 2.79, "ulc": 2.87, "feer": 2.9, "carry": 2.96, "jera": 2.75, "consW": 2.77}, {"t": 2010.5, "act": 1.75, "bm": 2.5, "bma": 2.62, "ipc": 2.64, "bs": 2.8, "tot": 2.8, "ulc": 2.88, "feer": 2.91, "carry": 2.98, "jera": 2.75, "consW": 2.78}, {"t": 2010.5833, "act": 1.74, "bm": 2.51, "bma": 2.62, "ipc": 2.65, "bs": 2.81, "tot": 2.81, "ulc": 2.89, "feer": 2.92, "carry": 2.99, "jera": 2.76, "consW": 2.79}, {"t": 2010.6667, "act": 1.72, "bm": 2.51, "bma": 2.63, "ipc": 2.66, "bs": 2.82, "tot": 2.82, "ulc": 2.9, "feer": 2.93, "carry": 3.0, "jera": 2.77, "consW": 2.8}, {"t": 2010.75, "act": 1.7, "bm": 2.52, "bma": 2.64, "ipc": 2.67, "bs": 2.83, "tot": 2.83, "ulc": 2.91, "feer": 2.94, "carry": 3.01, "jera": 2.78, "consW": 2.81}, {"t": 2010.8333, "act": 1.69, "bm": 2.52, "bma": 2.65, "ipc": 2.68, "bs": 2.84, "tot": 2.84, "ulc": 2.92, "feer": 2.95, "carry": 3.02, "jera": 2.79, "consW": 2.82}, {"t": 2010.9167, "act": 1.67, "bm": 2.53, "bma": 2.65, "ipc": 2.68, "bs": 2.85, "tot": 2.85, "ulc": 2.94, "feer": 2.97, "carry": 3.03, "jera": 2.8, "consW": 2.83}, {"t": 2011.0, "act": 1.65, "bm": 2.54, "bma": 2.66, "ipc": 2.69, "bs": 2.86, "tot": 2.86, "ulc": 2.95, "feer": 2.98, "carry": 3.05, "jera": 2.81, "consW": 2.84}, {"t": 2011.0833, "act": 1.64, "bm": 2.54, "bma": 2.67, "ipc": 2.7, "bs": 2.87, "tot": 2.87, "ulc": 2.96, "feer": 2.99, "carry": 3.06, "jera": 2.82, "consW": 2.85}, {"t": 2011.1667, "act": 1.62, "bm": 2.55, "bma": 2.68, "ipc": 2.71, "bs": 2.88, "tot": 2.88, "ulc": 2.97, "feer": 3.0, "carry": 3.07, "jera": 2.83, "consW": 2.86}, {"t": 2011.25, "act": 1.6, "bm": 2.56, "bma": 2.68, "ipc": 2.71, "bs": 2.89, "tot": 2.89, "ulc": 2.98, "feer": 3.01, "carry": 3.08, "jera": 2.84, "consW": 2.87}, {"t": 2011.3333, "act": 1.58, "bm": 2.56, "bma": 2.69, "ipc": 2.72, "bs": 2.9, "tot": 2.9, "ulc": 2.99, "feer": 3.02, "carry": 3.09, "jera": 2.85, "consW": 2.88}, {"t": 2011.4167, "act": 1.57, "bm": 2.57, "bma": 2.7, "ipc": 2.73, "bs": 2.91, "tot": 2.91, "ulc": 3.0, "feer": 3.03, "carry": 3.11, "jera": 2.85, "consW": 2.89}, {"t": 2011.5, "act": 1.55, "bm": 2.57, "bma": 2.71, "ipc": 2.74, "bs": 2.92, "tot": 2.92, "ulc": 3.01, "feer": 3.04, "carry": 3.12, "jera": 2.86, "consW": 2.9}, {"t": 2011.5833, "act": 1.62, "bm": 2.58, "bma": 2.71, "ipc": 2.75, "bs": 2.93, "tot": 2.93, "ulc": 3.02, "feer": 3.05, "carry": 3.13, "jera": 2.87, "consW": 2.91}, {"t": 2011.6667, "act": 1.68, "bm": 2.59, "bma": 2.72, "ipc": 2.75, "bs": 2.94, "tot": 2.94, "ulc": 3.03, "feer": 3.07, "carry": 3.14, "jera": 2.88, "consW": 2.92}, {"t": 2011.75, "act": 1.75, "bm": 2.59, "bma": 2.73, "ipc": 2.76, "bs": 2.95, "tot": 2.95, "ulc": 3.04, "feer": 3.08, "carry": 3.15, "jera": 2.89, "consW": 2.93}, {"t": 2011.8333, "act": 1.81, "bm": 2.6, "bma": 2.74, "ipc": 2.77, "bs": 2.96, "tot": 2.96, "ulc": 3.05, "feer": 3.09, "carry": 3.17, "jera": 2.9, "consW": 2.94}, {"t": 2011.9167, "act": 1.88, "bm": 2.61, "bma": 2.75, "ipc": 2.78, "bs": 2.97, "tot": 2.97, "ulc": 3.07, "feer": 3.1, "carry": 3.18, "jera": 2.91, "consW": 2.95}, {"t": 2012.0, "act": 1.91, "bm": 2.61, "bma": 2.75, "ipc": 2.79, "bs": 2.98, "tot": 2.98, "ulc": 3.08, "feer": 3.11, "carry": 3.19, "jera": 2.92, "consW": 2.96}, {"t": 2012.0833, "act": 1.94, "bm": 2.62, "bma": 2.76, "ipc": 2.8, "bs": 2.99, "tot": 2.99, "ulc": 3.09, "feer": 3.12, "carry": 3.2, "jera": 2.93, "consW": 2.97}, {"t": 2012.1667, "act": 1.97, "bm": 2.63, "bma": 2.77, "ipc": 2.8, "bs": 3.0, "tot": 3.0, "ulc": 3.1, "feer": 3.13, "carry": 3.22, "jera": 2.94, "consW": 2.98}, {"t": 2012.25, "act": 2.01, "bm": 2.63, "bma": 2.78, "ipc": 2.81, "bs": 3.01, "tot": 3.01, "ulc": 3.11, "feer": 3.15, "carry": 3.23, "jera": 2.95, "consW": 2.99}, {"t": 2012.3333, "act": 2.04, "bm": 2.64, "bma": 2.78, "ipc": 2.82, "bs": 3.02, "tot": 3.02, "ulc": 3.12, "feer": 3.16, "carry": 3.24, "jera": 2.96, "consW": 3.0}, {"t": 2012.4167, "act": 2.07, "bm": 2.65, "bma": 2.79, "ipc": 2.83, "bs": 3.03, "tot": 3.03, "ulc": 3.13, "feer": 3.17, "carry": 3.25, "jera": 2.97, "consW": 3.01}, {"t": 2012.5, "act": 2.07, "bm": 2.65, "bma": 2.8, "ipc": 2.84, "bs": 3.04, "tot": 3.04, "ulc": 3.14, "feer": 3.18, "carry": 3.27, "jera": 2.98, "consW": 3.02}, {"t": 2012.5833, "act": 2.06, "bm": 2.66, "bma": 2.81, "ipc": 2.84, "bs": 3.05, "tot": 3.05, "ulc": 3.16, "feer": 3.19, "carry": 3.28, "jera": 2.99, "consW": 3.03}, {"t": 2012.6667, "act": 2.05, "bm": 2.67, "bma": 2.82, "ipc": 2.85, "bs": 3.06, "tot": 3.06, "ulc": 3.17, "feer": 3.2, "carry": 3.29, "jera": 3.0, "consW": 3.04}, {"t": 2012.75, "act": 2.05, "bm": 2.67, "bma": 2.82, "ipc": 2.86, "bs": 3.07, "tot": 3.07, "ulc": 3.18, "feer": 3.22, "carry": 3.3, "jera": 3.01, "consW": 3.05}, {"t": 2012.8333, "act": 2.05, "bm": 2.68, "bma": 2.83, "ipc": 2.87, "bs": 3.08, "tot": 3.08, "ulc": 3.19, "feer": 3.23, "carry": 3.32, "jera": 3.02, "consW": 3.06}, {"t": 2012.9167, "act": 2.04, "bm": 2.69, "bma": 2.84, "ipc": 2.88, "bs": 3.09, "tot": 3.09, "ulc": 3.2, "feer": 3.24, "carry": 3.33, "jera": 3.03, "consW": 3.07}, {"t": 2013.0, "act": 2.07, "bm": 2.69, "bma": 2.85, "ipc": 2.89, "bs": 3.1, "tot": 3.1, "ulc": 3.21, "feer": 3.25, "carry": 3.34, "jera": 3.04, "consW": 3.08}, {"t": 2013.0833, "act": 2.1, "bm": 2.7, "bma": 2.86, "ipc": 2.9, "bs": 3.11, "tot": 3.11, "ulc": 3.22, "feer": 3.26, "carry": 3.35, "jera": 3.05, "consW": 3.09}, {"t": 2013.1667, "act": 2.13, "bm": 2.71, "bma": 2.87, "ipc": 2.9, "bs": 3.12, "tot": 3.12, "ulc": 3.24, "feer": 3.28, "carry": 3.37, "jera": 3.06, "consW": 3.1}, {"t": 2013.25, "act": 2.16, "bm": 2.71, "bma": 2.87, "ipc": 2.91, "bs": 3.14, "tot": 3.13, "ulc": 3.25, "feer": 3.29, "carry": 3.38, "jera": 3.07, "consW": 3.11}, {"t": 2013.3333, "act": 2.19, "bm": 2.72, "bma": 2.88, "ipc": 2.92, "bs": 3.15, "tot": 3.14, "ulc": 3.26, "feer": 3.3, "carry": 3.39, "jera": 3.08, "consW": 3.12}, {"t": 2013.4167, "act": 2.22, "bm": 2.73, "bma": 2.89, "ipc": 2.93, "bs": 3.16, "tot": 3.15, "ulc": 3.27, "feer": 3.31, "carry": 3.41, "jera": 3.09, "consW": 3.13}, {"t": 2013.5, "act": 2.24, "bm": 2.73, "bma": 2.9, "ipc": 2.94, "bs": 3.17, "tot": 3.16, "ulc": 3.28, "feer": 3.32, "carry": 3.42, "jera": 3.1, "consW": 3.14}, {"t": 2013.5833, "act": 2.27, "bm": 2.74, "bma": 2.91, "ipc": 2.95, "bs": 3.18, "tot": 3.17, "ulc": 3.29, "feer": 3.34, "carry": 3.43, "jera": 3.11, "consW": 3.15}, {"t": 2013.6667, "act": 2.29, "bm": 2.75, "bma": 2.91, "ipc": 2.95, "bs": 3.19, "tot": 3.18, "ulc": 3.31, "feer": 3.35, "carry": 3.45, "jera": 3.12, "consW": 3.16}, {"t": 2013.75, "act": 2.31, "bm": 2.75, "bma": 2.92, "ipc": 2.96, "bs": 3.2, "tot": 3.19, "ulc": 3.32, "feer": 3.36, "carry": 3.46, "jera": 3.13, "consW": 3.17}, {"t": 2013.8333, "act": 2.34, "bm": 2.76, "bma": 2.93, "ipc": 2.97, "bs": 3.21, "tot": 3.2, "ulc": 3.33, "feer": 3.37, "carry": 3.47, "jera": 3.14, "consW": 3.18}, {"t": 2013.9167, "act": 2.36, "bm": 2.77, "bma": 2.94, "ipc": 2.98, "bs": 3.22, "tot": 3.22, "ulc": 3.34, "feer": 3.39, "carry": 3.49, "jera": 3.15, "consW": 3.2}, {"t": 2014.0, "act": 2.34, "bm": 2.77, "bma": 2.95, "ipc": 2.99, "bs": 3.23, "tot": 3.23, "ulc": 3.35, "feer": 3.4, "carry": 3.5, "jera": 3.16, "consW": 3.2}, {"t": 2014.0833, "act": 2.32, "bm": 2.78, "bma": 2.96, "ipc": 3.0, "bs": 3.24, "tot": 3.24, "ulc": 3.37, "feer": 3.41, "carry": 3.51, "jera": 3.17, "consW": 3.22}, {"t": 2014.1667, "act": 2.3, "bm": 2.79, "bma": 2.96, "ipc": 3.01, "bs": 3.25, "tot": 3.25, "ulc": 3.38, "feer": 3.42, "carry": 3.53, "jera": 3.18, "consW": 3.23}, {"t": 2014.25, "act": 2.28, "bm": 2.79, "bma": 2.97, "ipc": 3.02, "bs": 3.27, "tot": 3.26, "ulc": 3.39, "feer": 3.44, "carry": 3.54, "jera": 3.19, "consW": 3.24}, {"t": 2014.3333, "act": 2.26, "bm": 2.8, "bma": 2.98, "ipc": 3.02, "bs": 3.28, "tot": 3.27, "ulc": 3.4, "feer": 3.45, "carry": 3.55, "jera": 3.2, "consW": 3.25}, {"t": 2014.4167, "act": 2.24, "bm": 2.81, "bma": 2.99, "ipc": 3.03, "bs": 3.29, "tot": 3.28, "ulc": 3.42, "feer": 3.46, "carry": 3.57, "jera": 3.21, "consW": 3.26}, {"t": 2014.5, "act": 2.31, "bm": 2.81, "bma": 3.0, "ipc": 3.04, "bs": 3.3, "tot": 3.29, "ulc": 3.43, "feer": 3.47, "carry": 3.58, "jera": 3.22, "consW": 3.27}, {"t": 2014.5833, "act": 2.39, "bm": 2.82, "bma": 3.01, "ipc": 3.05, "bs": 3.31, "tot": 3.3, "ulc": 3.44, "feer": 3.49, "carry": 3.6, "jera": 3.23, "consW": 3.28}, {"t": 2014.6667, "act": 2.46, "bm": 2.83, "bma": 3.02, "ipc": 3.06, "bs": 3.32, "tot": 3.31, "ulc": 3.45, "feer": 3.5, "carry": 3.61, "jera": 3.24, "consW": 3.29}, {"t": 2014.75, "act": 2.54, "bm": 2.84, "bma": 3.02, "ipc": 3.07, "bs": 3.33, "tot": 3.33, "ulc": 3.47, "feer": 3.51, "carry": 3.62, "jera": 3.25, "consW": 3.3}, {"t": 2014.8333, "act": 2.61, "bm": 2.84, "bma": 3.03, "ipc": 3.08, "bs": 3.34, "tot": 3.34, "ulc": 3.48, "feer": 3.53, "carry": 3.64, "jera": 3.26, "consW": 3.31}, {"t": 2014.9167, "act": 2.69, "bm": 2.85, "bma": 3.04, "ipc": 3.09, "bs": 3.36, "tot": 3.35, "ulc": 3.49, "feer": 3.54, "carry": 3.65, "jera": 3.27, "consW": 3.32}, {"t": 2015.0, "act": 2.85, "bm": 2.86, "bma": 3.05, "ipc": 3.1, "bs": 3.37, "tot": 3.36, "ulc": 3.5, "feer": 3.55, "carry": 3.67, "jera": 3.28, "consW": 3.34}, {"t": 2015.0833, "act": 3.01, "bm": 2.86, "bma": 3.06, "ipc": 3.11, "bs": 3.38, "tot": 3.37, "ulc": 3.52, "feer": 3.57, "carry": 3.68, "jera": 3.29, "consW": 3.35}, {"t": 2015.1667, "act": 3.17, "bm": 2.87, "bma": 3.07, "ipc": 3.11, "bs": 3.39, "tot": 3.38, "ulc": 3.53, "feer": 3.58, "carry": 3.69, "jera": 3.3, "consW": 3.36}, {"t": 2015.25, "act": 3.3, "bm": 2.88, "bma": 3.08, "ipc": 3.12, "bs": 3.4, "tot": 3.39, "ulc": 3.54, "feer": 3.59, "carry": 3.71, "jera": 3.31, "consW": 3.37}, {"t": 2015.3333, "act": 3.44, "bm": 2.89, "bma": 3.08, "ipc": 3.13, "bs": 3.41, "tot": 3.4, "ulc": 3.55, "feer": 3.6, "carry": 3.72, "jera": 3.32, "consW": 3.38}, {"t": 2015.4167, "act": 3.57, "bm": 2.89, "bma": 3.09, "ipc": 3.14, "bs": 3.42, "tot": 3.42, "ulc": 3.57, "feer": 3.62, "carry": 3.74, "jera": 3.34, "consW": 3.39}, {"t": 2015.5, "act": 3.7, "bm": 2.9, "bma": 3.1, "ipc": 3.15, "bs": 3.44, "tot": 3.43, "ulc": 3.58, "feer": 3.63, "carry": 3.75, "jera": 3.35, "consW": 3.4}, {"t": 2015.5833, "act": 3.84, "bm": 2.91, "bma": 3.11, "ipc": 3.16, "bs": 3.45, "tot": 3.44, "ulc": 3.59, "feer": 3.64, "carry": 3.77, "jera": 3.36, "consW": 3.41}, {"t": 2015.6667, "act": 3.97, "bm": 2.91, "bma": 3.12, "ipc": 3.17, "bs": 3.46, "tot": 3.45, "ulc": 3.61, "feer": 3.66, "carry": 3.78, "jera": 3.37, "consW": 3.43}, {"t": 2015.75, "act": 3.97, "bm": 2.92, "bma": 3.13, "ipc": 3.18, "bs": 3.47, "tot": 3.46, "ulc": 3.62, "feer": 3.67, "carry": 3.8, "jera": 3.38, "consW": 3.44}, {"t": 2015.8333, "act": 3.96, "bm": 2.93, "bma": 3.14, "ipc": 3.19, "bs": 3.48, "tot": 3.47, "ulc": 3.63, "feer": 3.69, "carry": 3.81, "jera": 3.39, "consW": 3.45}, {"t": 2015.9167, "act": 3.96, "bm": 2.94, "bma": 3.15, "ipc": 3.2, "bs": 3.49, "tot": 3.49, "ulc": 3.64, "feer": 3.7, "carry": 3.83, "jera": 3.4, "consW": 3.46}, {"t": 2016.0, "act": 4.05, "bm": 2.94, "bma": 3.16, "ipc": 3.21, "bs": 3.51, "tot": 3.5, "ulc": 3.66, "feer": 3.71, "carry": 3.84, "jera": 3.41, "consW": 3.47}, {"t": 2016.0833, "act": 3.93, "bm": 2.95, "bma": 3.16, "ipc": 3.22, "bs": 3.52, "tot": 3.51, "ulc": 3.67, "feer": 3.73, "carry": 3.85, "jera": 3.42, "consW": 3.48}, {"t": 2016.1667, "act": 3.81, "bm": 2.96, "bma": 3.17, "ipc": 3.23, "bs": 3.53, "tot": 3.52, "ulc": 3.68, "feer": 3.74, "carry": 3.87, "jera": 3.43, "consW": 3.49}, {"t": 2016.25, "act": 3.69, "bm": 2.96, "bma": 3.18, "ipc": 3.23, "bs": 3.54, "tot": 3.53, "ulc": 3.7, "feer": 3.75, "carry": 3.88, "jera": 3.45, "consW": 3.51}, {"t": 2016.3333, "act": 3.57, "bm": 2.97, "bma": 3.19, "ipc": 3.24, "bs": 3.55, "tot": 3.55, "ulc": 3.71, "feer": 3.77, "carry": 3.9, "jera": 3.46, "consW": 3.52}, {"t": 2016.4167, "act": 3.45, "bm": 2.98, "bma": 3.2, "ipc": 3.25, "bs": 3.57, "tot": 3.56, "ulc": 3.72, "feer": 3.78, "carry": 3.91, "jera": 3.47, "consW": 3.53}, {"t": 2016.5, "act": 3.42, "bm": 2.99, "bma": 3.21, "ipc": 3.26, "bs": 3.58, "tot": 3.57, "ulc": 3.74, "feer": 3.8, "carry": 3.93, "jera": 3.48, "consW": 3.54}, {"t": 2016.5833, "act": 3.39, "bm": 2.99, "bma": 3.22, "ipc": 3.27, "bs": 3.59, "tot": 3.58, "ulc": 3.75, "feer": 3.81, "carry": 3.95, "jera": 3.49, "consW": 3.55}, {"t": 2016.6667, "act": 3.35, "bm": 3.0, "bma": 3.23, "ipc": 3.28, "bs": 3.6, "tot": 3.59, "ulc": 3.76, "feer": 3.82, "carry": 3.96, "jera": 3.5, "consW": 3.56}, {"t": 2016.75, "act": 3.32, "bm": 3.01, "bma": 3.24, "ipc": 3.29, "bs": 3.61, "tot": 3.61, "ulc": 3.78, "feer": 3.84, "carry": 3.98, "jera": 3.51, "consW": 3.58}, {"t": 2016.8333, "act": 3.29, "bm": 3.02, "bma": 3.25, "ipc": 3.3, "bs": 3.63, "tot": 3.62, "ulc": 3.79, "feer": 3.85, "carry": 3.99, "jera": 3.52, "consW": 3.59}, {"t": 2016.9167, "act": 3.26, "bm": 3.02, "bma": 3.26, "ipc": 3.31, "bs": 3.64, "tot": 3.63, "ulc": 3.81, "feer": 3.87, "carry": 4.01, "jera": 3.54, "consW": 3.6}, {"t": 2017.0, "act": 3.27, "bm": 3.03, "bma": 3.26, "ipc": 3.32, "bs": 3.65, "tot": 3.64, "ulc": 3.82, "feer": 3.88, "carry": 4.02, "jera": 3.55, "consW": 3.61}, {"t": 2017.0833, "act": 3.27, "bm": 3.04, "bma": 3.27, "ipc": 3.33, "bs": 3.66, "tot": 3.66, "ulc": 3.83, "feer": 3.89, "carry": 4.04, "jera": 3.56, "consW": 3.63}, {"t": 2017.1667, "act": 3.28, "bm": 3.05, "bma": 3.28, "ipc": 3.34, "bs": 3.68, "tot": 3.67, "ulc": 3.85, "feer": 3.91, "carry": 4.05, "jera": 3.57, "consW": 3.64}, {"t": 2017.25, "act": 3.29, "bm": 3.05, "bma": 3.29, "ipc": 3.35, "bs": 3.69, "tot": 3.68, "ulc": 3.86, "feer": 3.92, "carry": 4.07, "jera": 3.58, "consW": 3.65}, {"t": 2017.3333, "act": 3.29, "bm": 3.06, "bma": 3.3, "ipc": 3.36, "bs": 3.7, "tot": 3.69, "ulc": 3.88, "feer": 3.94, "carry": 4.08, "jera": 3.59, "consW": 3.66}, {"t": 2017.4167, "act": 3.3, "bm": 3.07, "bma": 3.31, "ipc": 3.37, "bs": 3.71, "tot": 3.7, "ulc": 3.89, "feer": 3.95, "carry": 4.1, "jera": 3.61, "consW": 3.67}, {"t": 2017.5, "act": 3.3, "bm": 3.08, "bma": 3.32, "ipc": 3.38, "bs": 3.73, "tot": 3.72, "ulc": 3.9, "feer": 3.97, "carry": 4.12, "jera": 3.62, "consW": 3.69}, {"t": 2017.5833, "act": 3.3, "bm": 3.08, "bma": 3.33, "ipc": 3.39, "bs": 3.74, "tot": 3.73, "ulc": 3.92, "feer": 3.98, "carry": 4.13, "jera": 3.63, "consW": 3.7}, {"t": 2017.6667, "act": 3.3, "bm": 3.09, "bma": 3.34, "ipc": 3.4, "bs": 3.75, "tot": 3.74, "ulc": 3.93, "feer": 4.0, "carry": 4.15, "jera": 3.64, "consW": 3.71}, {"t": 2017.75, "act": 3.31, "bm": 3.1, "bma": 3.35, "ipc": 3.41, "bs": 3.76, "tot": 3.76, "ulc": 3.95, "feer": 4.01, "carry": 4.16, "jera": 3.65, "consW": 3.72}, {"t": 2017.8333, "act": 3.31, "bm": 3.11, "bma": 3.36, "ipc": 3.42, "bs": 3.78, "tot": 3.77, "ulc": 3.96, "feer": 4.03, "carry": 4.18, "jera": 3.66, "consW": 3.74}, {"t": 2017.9167, "act": 3.31, "bm": 3.12, "bma": 3.37, "ipc": 3.43, "bs": 3.79, "tot": 3.78, "ulc": 3.97, "feer": 4.04, "carry": 4.2, "jera": 3.68, "consW": 3.75}, {"t": 2018.0, "act": 3.39, "bm": 3.12, "bma": 3.38, "ipc": 3.44, "bs": 3.8, "tot": 3.79, "ulc": 3.99, "feer": 4.06, "carry": 4.21, "jera": 3.69, "consW": 3.76}, {"t": 2018.0833, "act": 3.48, "bm": 3.13, "bma": 3.39, "ipc": 3.45, "bs": 3.82, "tot": 3.81, "ulc": 4.0, "feer": 4.07, "carry": 4.23, "jera": 3.7, "consW": 3.78}, {"t": 2018.1667, "act": 3.56, "bm": 3.14, "bma": 3.4, "ipc": 3.46, "bs": 3.83, "tot": 3.82, "ulc": 4.02, "feer": 4.09, "carry": 4.25, "jera": 3.71, "consW": 3.79}, {"t": 2018.25, "act": 3.65, "bm": 3.15, "bma": 3.41, "ipc": 3.47, "bs": 3.84, "tot": 3.83, "ulc": 4.03, "feer": 4.1, "carry": 4.26, "jera": 3.72, "consW": 3.8}, {"t": 2018.3333, "act": 3.73, "bm": 3.15, "bma": 3.42, "ipc": 3.48, "bs": 3.85, "tot": 3.84, "ulc": 4.05, "feer": 4.12, "carry": 4.28, "jera": 3.74, "consW": 3.81}, {"t": 2018.4167, "act": 3.84, "bm": 3.16, "bma": 3.43, "ipc": 3.49, "bs": 3.87, "tot": 3.86, "ulc": 4.06, "feer": 4.13, "carry": 4.29, "jera": 3.75, "consW": 3.83}, {"t": 2018.5, "act": 3.96, "bm": 3.17, "bma": 3.44, "ipc": 3.5, "bs": 3.88, "tot": 3.87, "ulc": 4.08, "feer": 4.15, "carry": 4.31, "jera": 3.76, "consW": 3.84}, {"t": 2018.5833, "act": 4.07, "bm": 3.18, "bma": 3.45, "ipc": 3.51, "bs": 3.89, "tot": 3.88, "ulc": 4.09, "feer": 4.16, "carry": 4.33, "jera": 3.77, "consW": 3.85}, {"t": 2018.6667, "act": 4.18, "bm": 3.19, "bma": 3.45, "ipc": 3.52, "bs": 3.91, "tot": 3.9, "ulc": 4.11, "feer": 4.18, "carry": 4.34, "jera": 3.79, "consW": 3.87}, {"t": 2018.75, "act": 4.08, "bm": 3.19, "bma": 3.46, "ipc": 3.53, "bs": 3.92, "tot": 3.91, "ulc": 4.12, "feer": 4.19, "carry": 4.36, "jera": 3.8, "consW": 3.88}, {"t": 2018.8333, "act": 3.98, "bm": 3.2, "bma": 3.47, "ipc": 3.54, "bs": 3.93, "tot": 3.92, "ulc": 4.14, "feer": 4.21, "carry": 4.38, "jera": 3.81, "consW": 3.89}, {"t": 2018.9167, "act": 3.88, "bm": 3.21, "bma": 3.48, "ipc": 3.55, "bs": 3.95, "tot": 3.94, "ulc": 4.15, "feer": 4.22, "carry": 4.4, "jera": 3.82, "consW": 3.9}, {"t": 2019.0, "act": 3.87, "bm": 3.22, "bma": 3.49, "ipc": 3.56, "bs": 3.96, "tot": 3.95, "ulc": 4.17, "feer": 4.24, "carry": 4.41, "jera": 3.84, "consW": 3.92}, {"t": 2019.0833, "act": 3.86, "bm": 3.23, "bma": 3.5, "ipc": 3.57, "bs": 3.97, "tot": 3.96, "ulc": 4.18, "feer": 4.26, "carry": 4.43, "jera": 3.85, "consW": 3.93}, {"t": 2019.1667, "act": 3.85, "bm": 3.23, "bma": 3.51, "ipc": 3.58, "bs": 3.99, "tot": 3.98, "ulc": 4.2, "feer": 4.27, "carry": 4.45, "jera": 3.86, "consW": 3.94}, {"t": 2019.25, "act": 3.85, "bm": 3.24, "bma": 3.52, "ipc": 3.59, "bs": 4.0, "tot": 3.99, "ulc": 4.21, "feer": 4.29, "carry": 4.46, "jera": 3.87, "consW": 3.95}, {"t": 2019.3333, "act": 3.84, "bm": 3.25, "bma": 3.53, "ipc": 3.6, "bs": 4.01, "tot": 4.0, "ulc": 4.23, "feer": 4.3, "carry": 4.48, "jera": 3.89, "consW": 3.97}, {"t": 2019.4167, "act": 3.83, "bm": 3.26, "bma": 3.54, "ipc": 3.61, "bs": 4.03, "tot": 4.02, "ulc": 4.24, "feer": 4.32, "carry": 4.5, "jera": 3.9, "consW": 3.98}, {"t": 2019.5, "act": 3.86, "bm": 3.27, "bma": 3.55, "ipc": 3.63, "bs": 4.04, "tot": 4.03, "ulc": 4.26, "feer": 4.33, "carry": 4.52, "jera": 3.91, "consW": 4.0}, {"t": 2019.5833, "act": 3.9, "bm": 3.27, "bma": 3.56, "ipc": 3.64, "bs": 4.06, "tot": 4.04, "ulc": 4.27, "feer": 4.35, "carry": 4.53, "jera": 3.92, "consW": 4.01}, {"t": 2019.6667, "act": 3.93, "bm": 3.28, "bma": 3.57, "ipc": 3.65, "bs": 4.07, "tot": 4.06, "ulc": 4.29, "feer": 4.37, "carry": 4.55, "jera": 3.94, "consW": 4.02}, {"t": 2019.75, "act": 3.96, "bm": 3.29, "bma": 3.58, "ipc": 3.66, "bs": 4.08, "tot": 4.07, "ulc": 4.3, "feer": 4.38, "carry": 4.57, "jera": 3.95, "consW": 4.04}, {"t": 2019.8333, "act": 4.0, "bm": 3.3, "bma": 3.59, "ipc": 3.67, "bs": 4.1, "tot": 4.09, "ulc": 4.32, "feer": 4.4, "carry": 4.59, "jera": 3.96, "consW": 4.05}, {"t": 2019.9167, "act": 4.03, "bm": 3.31, "bma": 3.61, "ipc": 3.68, "bs": 4.11, "tot": 4.1, "ulc": 4.33, "feer": 4.41, "carry": 4.6, "jera": 3.97, "consW": 4.06}, {"t": 2020.0, "act": 4.42, "bm": 3.31, "bma": 3.62, "ipc": 3.69, "bs": 4.13, "tot": 4.11, "ulc": 4.35, "feer": 4.43, "carry": 4.62, "jera": 3.99, "consW": 4.08}, {"t": 2020.0833, "act": 4.81, "bm": 3.32, "bma": 3.63, "ipc": 3.7, "bs": 4.14, "tot": 4.13, "ulc": 4.37, "feer": 4.45, "carry": 4.64, "jera": 4.0, "consW": 4.09}, {"t": 2020.1667, "act": 5.2, "bm": 3.33, "bma": 3.64, "ipc": 3.71, "bs": 4.15, "tot": 4.14, "ulc": 4.38, "feer": 4.46, "carry": 4.66, "jera": 4.01, "consW": 4.1}, {"t": 2020.25, "act": 5.48, "bm": 3.34, "bma": 3.65, "ipc": 3.72, "bs": 4.17, "tot": 4.16, "ulc": 4.4, "feer": 4.48, "carry": 4.68, "jera": 4.03, "consW": 4.12}, {"t": 2020.3333, "act": 5.77, "bm": 3.35, "bma": 3.66, "ipc": 3.73, "bs": 4.18, "tot": 4.17, "ulc": 4.41, "feer": 4.5, "carry": 4.69, "jera": 4.04, "consW": 4.13}, {"t": 2020.4167, "act": 5.69, "bm": 3.36, "bma": 3.67, "ipc": 3.74, "bs": 4.2, "tot": 4.18, "ulc": 4.43, "feer": 4.51, "carry": 4.71, "jera": 4.05, "consW": 4.15}, {"t": 2020.5, "act": 5.6, "bm": 3.36, "bma": 3.68, "ipc": 3.75, "bs": 4.21, "tot": 4.2, "ulc": 4.44, "feer": 4.53, "carry": 4.73, "jera": 4.07, "consW": 4.16}, {"t": 2020.5833, "act": 5.52, "bm": 3.37, "bma": 3.69, "ipc": 3.77, "bs": 4.22, "tot": 4.21, "ulc": 4.46, "feer": 4.55, "carry": 4.75, "jera": 4.08, "consW": 4.17}, {"t": 2020.6667, "act": 5.44, "bm": 3.38, "bma": 3.7, "ipc": 3.78, "bs": 4.24, "tot": 4.23, "ulc": 4.48, "feer": 4.56, "carry": 4.77, "jera": 4.09, "consW": 4.19}, {"t": 2020.75, "act": 5.36, "bm": 3.39, "bma": 3.71, "ipc": 3.79, "bs": 4.25, "tot": 4.24, "ulc": 4.49, "feer": 4.58, "carry": 4.79, "jera": 4.11, "consW": 4.2}, {"t": 2020.8333, "act": 5.27, "bm": 3.4, "bma": 3.72, "ipc": 3.8, "bs": 4.27, "tot": 4.25, "ulc": 4.51, "feer": 4.6, "carry": 4.8, "jera": 4.12, "consW": 4.22}, {"t": 2020.9167, "act": 5.19, "bm": 3.41, "bma": 3.73, "ipc": 3.81, "bs": 4.28, "tot": 4.27, "ulc": 4.53, "feer": 4.61, "carry": 4.82, "jera": 4.13, "consW": 4.23}, {"t": 2021.0, "act": 5.16, "bm": 3.41, "bma": 3.74, "ipc": 3.82, "bs": 4.3, "tot": 4.28, "ulc": 4.54, "feer": 4.63, "carry": 4.84, "jera": 4.15, "consW": 4.24}, {"t": 2021.0833, "act": 5.13, "bm": 3.42, "bma": 3.75, "ipc": 3.83, "bs": 4.31, "tot": 4.3, "ulc": 4.56, "feer": 4.65, "carry": 4.86, "jera": 4.16, "consW": 4.26}, {"t": 2021.1667, "act": 5.1, "bm": 3.43, "bma": 3.76, "ipc": 3.84, "bs": 4.33, "tot": 4.31, "ulc": 4.57, "feer": 4.67, "carry": 4.88, "jera": 4.17, "consW": 4.27}, {"t": 2021.25, "act": 5.06, "bm": 3.44, "bma": 3.77, "ipc": 3.85, "bs": 4.34, "tot": 4.33, "ulc": 4.59, "feer": 4.68, "carry": 4.9, "jera": 4.19, "consW": 4.29}, {"t": 2021.3333, "act": 5.03, "bm": 3.45, "bma": 3.78, "ipc": 3.87, "bs": 4.35, "tot": 4.34, "ulc": 4.61, "feer": 4.7, "carry": 4.92, "jera": 4.2, "consW": 4.3}, {"t": 2021.4167, "act": 5.0, "bm": 3.46, "bma": 3.79, "ipc": 3.88, "bs": 4.37, "tot": 4.36, "ulc": 4.62, "feer": 4.72, "carry": 4.94, "jera": 4.21, "consW": 4.32}, {"t": 2021.5, "act": 5.09, "bm": 3.47, "bma": 3.8, "ipc": 3.89, "bs": 4.38, "tot": 4.37, "ulc": 4.64, "feer": 4.73, "carry": 4.95, "jera": 4.23, "consW": 4.33}, {"t": 2021.5833, "act": 5.19, "bm": 3.47, "bma": 3.82, "ipc": 3.9, "bs": 4.4, "tot": 4.39, "ulc": 4.66, "feer": 4.75, "carry": 4.97, "jera": 4.24, "consW": 4.35}, {"t": 2021.6667, "act": 5.29, "bm": 3.48, "bma": 3.83, "ipc": 3.91, "bs": 4.41, "tot": 4.4, "ulc": 4.67, "feer": 4.77, "carry": 4.99, "jera": 4.25, "consW": 4.36}, {"t": 2021.75, "act": 5.38, "bm": 3.49, "bma": 3.84, "ipc": 3.92, "bs": 4.43, "tot": 4.42, "ulc": 4.69, "feer": 4.79, "carry": 5.01, "jera": 4.27, "consW": 4.38}, {"t": 2021.8333, "act": 5.47, "bm": 3.5, "bma": 3.85, "ipc": 3.93, "bs": 4.44, "tot": 4.43, "ulc": 4.71, "feer": 4.81, "carry": 5.03, "jera": 4.28, "consW": 4.39}, {"t": 2021.9167, "act": 5.57, "bm": 3.51, "bma": 3.86, "ipc": 3.95, "bs": 4.46, "tot": 4.45, "ulc": 4.73, "feer": 4.82, "carry": 5.05, "jera": 4.3, "consW": 4.41}, {"t": 2022.0, "act": 5.36, "bm": 3.52, "bma": 3.87, "ipc": 3.96, "bs": 4.47, "tot": 4.46, "ulc": 4.74, "feer": 4.84, "carry": 5.07, "jera": 4.31, "consW": 4.42}, {"t": 2022.0833, "act": 5.15, "bm": 3.53, "bma": 3.88, "ipc": 3.97, "bs": 4.49, "tot": 4.48, "ulc": 4.76, "feer": 4.86, "carry": 5.09, "jera": 4.32, "consW": 4.43}, {"t": 2022.1667, "act": 4.93, "bm": 3.53, "bma": 3.89, "ipc": 3.98, "bs": 4.5, "tot": 4.49, "ulc": 4.78, "feer": 4.88, "carry": 5.11, "jera": 4.34, "consW": 4.45}, {"t": 2022.25, "act": 4.72, "bm": 3.54, "bma": 3.9, "ipc": 3.99, "bs": 4.52, "tot": 4.51, "ulc": 4.79, "feer": 4.89, "carry": 5.13, "jera": 4.35, "consW": 4.46}, {"t": 2022.3333, "act": 4.91, "bm": 3.55, "bma": 3.91, "ipc": 4.0, "bs": 4.54, "tot": 4.52, "ulc": 4.81, "feer": 4.91, "carry": 5.15, "jera": 4.37, "consW": 4.48}, {"t": 2022.4167, "act": 5.11, "bm": 3.56, "bma": 3.93, "ipc": 4.02, "bs": 4.55, "tot": 4.54, "ulc": 4.83, "feer": 4.93, "carry": 5.17, "jera": 4.38, "consW": 4.49}, {"t": 2022.5, "act": 5.3, "bm": 3.57, "bma": 3.94, "ipc": 4.03, "bs": 4.57, "tot": 4.55, "ulc": 4.85, "feer": 4.95, "carry": 5.19, "jera": 4.4, "consW": 4.51}, {"t": 2022.5833, "act": 5.27, "bm": 3.58, "bma": 3.95, "ipc": 4.04, "bs": 4.58, "tot": 4.57, "ulc": 4.86, "feer": 4.97, "carry": 5.21, "jera": 4.41, "consW": 4.52}, {"t": 2022.6667, "act": 5.25, "bm": 3.59, "bma": 3.96, "ipc": 4.05, "bs": 4.6, "tot": 4.58, "ulc": 4.88, "feer": 4.99, "carry": 5.23, "jera": 4.42, "consW": 4.54}, {"t": 2022.75, "act": 5.22, "bm": 3.6, "bma": 3.97, "ipc": 4.06, "bs": 4.61, "tot": 4.6, "ulc": 4.9, "feer": 5.0, "carry": 5.25, "jera": 4.44, "consW": 4.55}, {"t": 2022.8333, "act": 5.2, "bm": 3.6, "bma": 3.98, "ipc": 4.07, "bs": 4.63, "tot": 4.61, "ulc": 4.92, "feer": 5.02, "carry": 5.27, "jera": 4.45, "consW": 4.57}, {"t": 2022.9167, "act": 5.17, "bm": 3.61, "bma": 3.99, "ipc": 4.09, "bs": 4.64, "tot": 4.63, "ulc": 4.93, "feer": 5.04, "carry": 5.29, "jera": 4.47, "consW": 4.58}, {"t": 2023.0, "act": 5.12, "bm": 3.62, "bma": 4.0, "ipc": 4.1, "bs": 4.66, "tot": 4.64, "ulc": 4.95, "feer": 5.06, "carry": 5.31, "jera": 4.48, "consW": 4.6}, {"t": 2023.0833, "act": 5.07, "bm": 3.63, "bma": 4.02, "ipc": 4.11, "bs": 4.68, "tot": 4.66, "ulc": 4.97, "feer": 5.08, "carry": 5.33, "jera": 4.5, "consW": 4.62}, {"t": 2023.1667, "act": 5.02, "bm": 3.64, "bma": 4.03, "ipc": 4.12, "bs": 4.69, "tot": 4.68, "ulc": 4.99, "feer": 5.1, "carry": 5.35, "jera": 4.51, "consW": 4.63}, {"t": 2023.25, "act": 4.97, "bm": 3.65, "bma": 4.04, "ipc": 4.13, "bs": 4.71, "tot": 4.69, "ulc": 5.01, "feer": 5.12, "carry": 5.37, "jera": 4.53, "consW": 4.65}, {"t": 2023.3333, "act": 4.96, "bm": 3.66, "bma": 4.05, "ipc": 4.15, "bs": 4.72, "tot": 4.71, "ulc": 5.02, "feer": 5.13, "carry": 5.39, "jera": 4.54, "consW": 4.66}, {"t": 2023.4167, "act": 4.94, "bm": 3.67, "bma": 4.06, "ipc": 4.16, "bs": 4.74, "tot": 4.72, "ulc": 5.04, "feer": 5.15, "carry": 5.41, "jera": 4.56, "consW": 4.68}, {"t": 2023.5, "act": 4.93, "bm": 3.68, "bma": 4.07, "ipc": 4.17, "bs": 4.76, "tot": 4.74, "ulc": 5.06, "feer": 5.17, "carry": 5.44, "jera": 4.57, "consW": 4.69}, {"t": 2023.5833, "act": 4.91, "bm": 3.69, "bma": 4.08, "ipc": 4.18, "bs": 4.77, "tot": 4.76, "ulc": 5.08, "feer": 5.19, "carry": 5.46, "jera": 4.58, "consW": 4.71}, {"t": 2023.6667, "act": 4.9, "bm": 3.7, "bma": 4.1, "ipc": 4.2, "bs": 4.79, "tot": 4.77, "ulc": 5.1, "feer": 5.21, "carry": 5.48, "jera": 4.6, "consW": 4.73}, {"t": 2023.75, "act": 4.88, "bm": 3.7, "bma": 4.11, "ipc": 4.21, "bs": 4.8, "tot": 4.79, "ulc": 5.12, "feer": 5.23, "carry": 5.5, "jera": 4.61, "consW": 4.74}, {"t": 2023.8333, "act": 4.87, "bm": 3.71, "bma": 4.12, "ipc": 4.22, "bs": 4.82, "tot": 4.8, "ulc": 5.13, "feer": 5.25, "carry": 5.52, "jera": 4.63, "consW": 4.76}, {"t": 2023.9167, "act": 4.85, "bm": 3.72, "bma": 4.13, "ipc": 4.23, "bs": 4.84, "tot": 4.82, "ulc": 5.15, "feer": 5.27, "carry": 5.54, "jera": 4.64, "consW": 4.77}, {"t": 2024.0, "act": 4.89, "bm": 3.73, "bma": 4.14, "ipc": 4.24, "bs": 4.85, "tot": 4.84, "ulc": 5.17, "feer": 5.29, "carry": 5.56, "jera": 4.66, "consW": 4.79}, {"t": 2024.0833, "act": 4.93, "bm": 3.74, "bma": 4.15, "ipc": 4.26, "bs": 4.87, "tot": 4.85, "ulc": 5.19, "feer": 5.31, "carry": 5.58, "jera": 4.67, "consW": 4.8}, {"t": 2024.1667, "act": 4.97, "bm": 3.75, "bma": 4.17, "ipc": 4.27, "bs": 4.89, "tot": 4.87, "ulc": 5.21, "feer": 5.33, "carry": 5.61, "jera": 4.69, "consW": 4.82}, {"t": 2024.25, "act": 5.09, "bm": 3.76, "bma": 4.18, "ipc": 4.28, "bs": 4.9, "tot": 4.89, "ulc": 5.23, "feer": 5.35, "carry": 5.63, "jera": 4.71, "consW": 4.84}, {"t": 2024.3333, "act": 5.21, "bm": 3.77, "bma": 4.19, "ipc": 4.29, "bs": 4.92, "tot": 4.9, "ulc": 5.25, "feer": 5.37, "carry": 5.65, "jera": 4.72, "consW": 4.85}, {"t": 2024.4167, "act": 5.33, "bm": 3.78, "bma": 4.2, "ipc": 4.31, "bs": 4.94, "tot": 4.92, "ulc": 5.27, "feer": 5.39, "carry": 5.67, "jera": 4.74, "consW": 4.87}, {"t": 2024.5, "act": 5.45, "bm": 3.79, "bma": 4.21, "ipc": 4.32, "bs": 4.95, "tot": 4.94, "ulc": 5.28, "feer": 5.41, "carry": 5.69, "jera": 4.75, "consW": 4.89}, {"t": 2024.5833, "act": 5.52, "bm": 3.8, "bma": 4.23, "ipc": 4.33, "bs": 4.97, "tot": 4.95, "ulc": 5.3, "feer": 5.43, "carry": 5.72, "jera": 4.77, "consW": 4.9}, {"t": 2024.6667, "act": 5.58, "bm": 3.81, "bma": 4.24, "ipc": 4.35, "bs": 4.99, "tot": 4.97, "ulc": 5.32, "feer": 5.45, "carry": 5.74, "jera": 4.78, "consW": 4.92}, {"t": 2024.75, "act": 5.65, "bm": 3.82, "bma": 4.25, "ipc": 4.36, "bs": 5.0, "tot": 4.99, "ulc": 5.34, "feer": 5.47, "carry": 5.76, "jera": 4.8, "consW": 4.94}, {"t": 2024.8333, "act": 5.87, "bm": 3.83, "bma": 4.26, "ipc": 4.37, "bs": 5.02, "tot": 5.0, "ulc": 5.36, "feer": 5.49, "carry": 5.78, "jera": 4.81, "consW": 4.95}, {"t": 2024.9167, "act": 6.1, "bm": 3.83, "bma": 4.27, "ipc": 4.38, "bs": 5.04, "tot": 5.02, "ulc": 5.38, "feer": 5.51, "carry": 5.8, "jera": 4.83, "consW": 4.97}, {"t": 2025.0, "act": 6.15, "bm": 3.84, "bma": 4.29, "ipc": 4.4, "bs": 5.05, "tot": 5.04, "ulc": 5.4, "feer": 5.53, "carry": 5.83, "jera": 4.84, "consW": 4.99}, {"t": 2025.0833, "act": 6.01, "bm": 3.85, "bma": 4.3, "ipc": 4.41, "bs": 5.07, "tot": 5.05, "ulc": 5.42, "feer": 5.55, "carry": 5.85, "jera": 4.86, "consW": 5.0}, {"t": 2025.1667, "act": 5.87, "bm": 3.86, "bma": 4.31, "ipc": 4.42, "bs": 5.09, "tot": 5.07, "ulc": 5.44, "feer": 5.57, "carry": 5.87, "jera": 4.88, "consW": 5.02}, {"t": 2025.25, "act": 5.81, "bm": 3.87, "bma": 4.32, "ipc": 4.44, "bs": 5.11, "tot": 5.09, "ulc": 5.46, "feer": 5.59, "carry": 5.89, "jera": 4.89, "consW": 5.04}, {"t": 2025.3333, "act": 5.76, "bm": 3.88, "bma": 4.34, "ipc": 4.45, "bs": 5.12, "tot": 5.1, "ulc": 5.48, "feer": 5.61, "carry": 5.92, "jera": 4.91, "consW": 5.05}, {"t": 2025.4167, "act": 5.7, "bm": 3.89, "bma": 4.35, "ipc": 4.46, "bs": 5.14, "tot": 5.12, "ulc": 5.5, "feer": 5.63, "carry": 5.94, "jera": 4.92, "consW": 5.07}, {"t": 2025.5, "act": 5.68, "bm": 3.9, "bma": 4.36, "ipc": 4.47, "bs": 5.16, "tot": 5.14, "ulc": 5.52, "feer": 5.65, "carry": 5.96, "jera": 4.94, "consW": 5.09}, {"t": 2025.5833, "act": 5.67, "bm": 3.91, "bma": 4.37, "ipc": 4.49, "bs": 5.18, "tot": 5.16, "ulc": 5.54, "feer": 5.67, "carry": 5.99, "jera": 4.96, "consW": 5.11}, {"t": 2025.6667, "act": 5.65, "bm": 3.92, "bma": 4.38, "ipc": 4.5, "bs": 5.19, "tot": 5.17, "ulc": 5.56, "feer": 5.69, "carry": 6.01, "jera": 4.97, "consW": 5.12}, {"t": 2025.75, "act": 5.68, "bm": 3.93, "bma": 4.4, "ipc": 4.51, "bs": 5.21, "tot": 5.19, "ulc": 5.58, "feer": 5.71, "carry": 6.03, "jera": 4.99, "consW": 5.14}, {"t": 2025.8333, "act": 5.72, "bm": 3.94, "bma": 4.41, "ipc": 4.53, "bs": 5.23, "tot": 5.21, "ulc": 5.6, "feer": 5.73, "carry": 6.06, "jera": 5.0, "consW": 5.16}, {"t": 2025.9167, "act": 5.75, "bm": 3.95, "bma": 4.42, "ipc": 4.54, "bs": 5.25, "tot": 5.23, "ulc": 5.62, "feer": 5.76, "carry": 6.08, "jera": 5.02, "consW": 5.17}, {"t": 2026.0, "act": 5.6, "bm": 3.96, "bma": 4.43, "ipc": 4.55, "bs": 5.26, "tot": 5.24, "ulc": 5.64, "feer": 5.78, "carry": 6.1, "jera": 5.04, "consW": 5.19}, {"t": 2026.0833, "act": 5.45, "bm": 3.97, "bma": 4.45, "ipc": 4.57, "bs": 5.28, "tot": 5.26, "ulc": 5.66, "feer": 5.8, "carry": 6.13, "jera": 5.05, "consW": 5.21}, {"t": 2026.1667, "act": 5.3, "bm": 3.98, "bma": 4.46, "ipc": 4.58, "bs": 5.3, "tot": 5.28, "ulc": 5.68, "feer": 5.82, "carry": 6.15, "jera": 5.07, "consW": 5.23}], "q1Spot": 5.3, "weightedConsensus": 5.23, "simpleConsensus": 5.15, "currentLabel": "Q1/2026 (painel comparativo)", "currentPointLabel": "Mar/2026"}, "hybrid": {"label": "Broad dollar / proxy DXY", "series": "TWEXBGSMTH", "date": "Fev/2026", "value": 117.906, "neutral": 100.0, "betaDxy": 0.45, "betaProd": 0.6, "fairReer": 4.77, "fairReerDxy": 5.14, "fairProdDefault": 5.14}};
+
+    const JERA_ML = {"name":"Sinal tático integrado","method":"Ridge regularizada para regime recente","currentFair":5.5447,"currentSpot":5.3,"currentGapPct":4.6,"reerFair":4.74,"legacyJera":5.07,"consensus":5.23,"holdout":{"window":"Jan/2024–Mar/2026","trainWindow":"Jan/2010–Dez/2023","validationWindow":"Jan/2021–Dez/2023","alpha":150,"features":["REER fair","Média do painel comparativo","Carry fair","Dispersão do painel","Amplitude do painel","Gap painel vs REER"],"metrics":[{"id":"jeraML","label":"Sinal tático","rmse":0.2976,"mae":0.2306,"r2":0.192},{"id":"consW","label":"Painel comparativo médio","rmse":0.6357,"mae":0.5652,"r2":-2.688},{"id":"legacyJera","label":"Composite macro-finance","rmse":0.7661,"mae":0.7081,"r2":-4.357},{"id":"reerFair","label":"Âncora REER","rmse":0.7857,"mae":0.7041,"r2":-4.634}]},"topDrivers":[{"name":"Range do stack","value":0.4394},{"name":"Dispersão do stack","value":0.4389},{"name":"Carry fair","value":0.4325},{"name":"Painel comparativo médio","value":0.4305},{"name":"REER fair","value":0.2567},{"name":"Gap consenso vs REER","value":-0.238}],"series":[{"label":"01/24","t":2024,"act":4.89,"jeraML":5.4002,"legacyJera":4.66,"consW":4.79,"reerFair":4.93},{"label":"02/24","t":2024.0833,"act":4.93,"jeraML":5.4128,"legacyJera":4.67,"consW":4.8,"reerFair":4.93},{"label":"03/24","t":2024.1667,"act":4.97,"jeraML":5.4332,"legacyJera":4.69,"consW":4.82,"reerFair":4.93},{"label":"04/24","t":2024.25,"act":5.09,"jeraML":5.445,"legacyJera":4.71,"consW":4.84,"reerFair":4.93},{"label":"05/24","t":2024.3333,"act":5.21,"jeraML":5.4591,"legacyJera":4.72,"consW":4.85,"reerFair":4.93},{"label":"06/24","t":2024.4167,"act":5.33,"jeraML":5.4698,"legacyJera":4.74,"consW":4.87,"reerFair":4.93},{"label":"07/24","t":2024.5,"act":5.45,"jeraML":5.4804,"legacyJera":4.75,"consW":4.89,"reerFair":4.93},{"label":"08/24","t":2024.5833,"act":5.52,"jeraML":5.5024,"legacyJera":4.77,"consW":4.9,"reerFair":4.93},{"label":"09/24","t":2024.6667,"act":5.58,"jeraML":5.5134,"legacyJera":4.78,"consW":4.92,"reerFair":4.93},{"label":"10/24","t":2024.75,"act":5.65,"jeraML":5.5252,"legacyJera":4.8,"consW":4.94,"reerFair":4.93},{"label":"11/24","t":2024.8333,"act":5.87,"jeraML":5.5392,"legacyJera":4.81,"consW":4.95,"reerFair":4.93},{"label":"12/24","t":2024.9167,"act":6.1,"jeraML":5.5594,"legacyJera":4.83,"consW":4.97,"reerFair":4.93},{"label":"01/25","t":2025,"act":6.15,"jeraML":5.5087,"legacyJera":4.84,"consW":4.99,"reerFair":4.84},{"label":"02/25","t":2025.0833,"act":6.01,"jeraML":5.5226,"legacyJera":4.86,"consW":5,"reerFair":4.84},{"label":"03/25","t":2025.1667,"act":5.87,"jeraML":5.5348,"legacyJera":4.88,"consW":5.02,"reerFair":4.84},{"label":"04/25","t":2025.25,"act":5.81,"jeraML":5.5458,"legacyJera":4.89,"consW":5.04,"reerFair":4.84},{"label":"05/25","t":2025.3333,"act":5.76,"jeraML":5.5674,"legacyJera":4.91,"consW":5.05,"reerFair":4.84},{"label":"06/25","t":2025.4167,"act":5.7,"jeraML":5.5798,"legacyJera":4.92,"consW":5.07,"reerFair":4.84},{"label":"07/25","t":2025.5,"act":5.68,"jeraML":5.592,"legacyJera":4.94,"consW":5.09,"reerFair":4.84},{"label":"08/25","t":2025.5833,"act":5.67,"jeraML":5.6127,"legacyJera":4.96,"consW":5.11,"reerFair":4.84},{"label":"09/25","t":2025.6667,"act":5.65,"jeraML":5.6264,"legacyJera":4.97,"consW":5.12,"reerFair":4.84},{"label":"10/25","t":2025.75,"act":5.68,"jeraML":5.6368,"legacyJera":4.99,"consW":5.14,"reerFair":4.84},{"label":"11/25","t":2025.8333,"act":5.72,"jeraML":5.6577,"legacyJera":5,"consW":5.16,"reerFair":4.84},{"label":"12/25","t":2025.9167,"act":5.75,"jeraML":5.6737,"legacyJera":5.02,"consW":5.17,"reerFair":4.84},{"label":"01/26","t":2026,"act":5.6,"jeraML":5.6081,"legacyJera":5.04,"consW":5.19,"reerFair":4.74},{"label":"02/26","t":2026.0833,"act":5.45,"jeraML":5.6272,"legacyJera":5.05,"consW":5.21,"reerFair":4.74},{"label":"03/26","t":2026.1667,"act":5.3,"jeraML":5.6394,"legacyJera":5.07,"consW":5.23,"reerFair":4.74}]};
+    const legacyJeraModel = DATA.legacy.models.find(m => m.id === 'jera');
+    if (legacyJeraModel) legacyJeraModel.name = 'Composite macro-finance';
+    const COLORS = {
+      ink: '#0f1c2d',
+      navy: '#10233b',
+      gold: '#b08a2d',
+      blue: '#2f6fed',
+      cyan: '#1495aa',
+      green: '#1d9b5f',
+      red: '#cf4b46',
+      orange: '#d97706',
+      violet: '#7c6ee6',
+      pink: '#cf4f8b',
+      silver: '#8494a8'
+    };
+
+    const STATE = {
+      visibleModels: new Set(DATA.legacy.models.map(m => m.id)),
+      horizon: 2031
+    };
+
+    const MODEL_PRESETS = {
+      all: DATA.legacy.models.map(m => m.id),
+      core: ['ipc','bs','tot','ulc','feer','jera'],
+      tactical: ['carry','tot','bs','jera'],
+      jera: ['jera']
+    };
+
+    const HYBRID_PRESETS = {
+      current: { dxy: DATA.hybrid.value, betaDxy: 0.45, prodGap: 0, betaProd: 0.60 },
+      soft: { dxy: 95, betaDxy: 0.45, prodGap: -3, betaProd: 0.60 },
+      strong: { dxy: 110, betaDxy: 0.45, prodGap: 5, betaProd: 0.60 },
+      ai: { dxy: 125, betaDxy: 0.50, prodGap: 12, betaProd: 0.60 }
+    };
+
+
+    const LAB_STATE = { horizon: 5 };
+
+    const LAB_NEUTRALS = {
+      dxy: 100,
+      cds: 140,
+      carry: 9.5,
+      comm: 100,
+      prod: 0
+    };
+
+    const LAB_PRESETS = {
+      current: { anchor: DATA.hybrid.fairReer, dxy: DATA.hybrid.value, cds: 139, carry: 9.85, comm: 100, prod: 0 },
+      reform: { anchor: 4.60, dxy: 95, cds: 85, carry: 11.5, comm: 110, prod: -3 },
+      fiscal: { anchor: 4.95, dxy: 110, cds: 260, carry: 8.0, comm: 95, prod: 1 },
+      commodities: { anchor: 4.90, dxy: 108, cds: 180, carry: 9.0, comm: 82, prod: 0 },
+      ai: { anchor: 5.00, dxy: 125, cds: 220, carry: 8.5, comm: 90, prod: 12 }
+    };
+
+    const LAB_SENS = {
+      1:  { dxy: 0.48, cds: 0.14, carry: 0.030, comm: 0.20, prod: 0.10 },
+      3:  { dxy: 0.45, cds: 0.13, carry: 0.026, comm: 0.18, prod: 0.30 },
+      5:  { dxy: 0.42, cds: 0.12, carry: 0.020, comm: 0.16, prod: 0.60 },
+      10: { dxy: 0.35, cds: 0.08, carry: 0.010, comm: 0.12, prod: 0.85 }
+    };
+
+    const HZ_NOTES = {
+      2027: 'No horizonte de 12 meses, a dispersão ainda é relativamente contida. O ponto principal continua sendo distinguir “BRL fraco, mas funcional” de uma deterioração efetiva de regime.',
+      2031: 'No meio da década, a diferença entre um regime benigno, um regime fiscal e uma cauda de super-dólar já fica plenamente visível. É o horizonte mais útil para organizar a conversa institucional.',
+      2036: 'No fim do horizonte, o gráfico deixa de ser sobre target tático e passa a ser sobre arquitetura de regime. O cenário central continua fraco; as caudas mudam materialmente a fotografia nominal da década.'
+    };
+
+    function fmtBRL(v){ return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+    function fmtNum(v, d=2){ return Number(v).toFixed(d).replace('.', ','); }
+    function fmtPct(v){ return (v > 0 ? '+' : '') + Number(v).toFixed(1).replace('.', ',') + '%'; }
+
+    function linePath(points, xFn, yFn){
+      let path = '';
+      points.forEach((p) => {
+        const xv = xFn(p), yv = yFn(p);
+        if (!isFinite(xv) || !isFinite(yv)) return;
+        path += (path ? ' L ' : 'M ') + xv + ' ' + yv;
+      });
+      return path;
+    }
+
+    function areaPath(points, xFn, yLowFn, yHighFn){
+      const top = [];
+      const bottom = [];
+      points.forEach(p => {
+        const xv = xFn(p), yv = yHighFn(p);
+        if (isFinite(xv) && isFinite(yv)) top.push([xv, yv]);
+      });
+      [...points].reverse().forEach(p => {
+        const xv = xFn(p), yv = yLowFn(p);
+        if (isFinite(xv) && isFinite(yv)) bottom.push([xv, yv]);
+      });
+      if (!top.length || !bottom.length) return '';
+      const first = top[0];
+      return 'M ' + first[0] + ' ' + first[1] + ' ' +
+        top.slice(1).map(p => 'L ' + p[0] + ' ' + p[1]).join(' ') + ' ' +
+        bottom.map(p => 'L ' + p[0] + ' ' + p[1]).join(' ') + ' Z';
+    }
+
+    function makeChart(cfg){
+      const width = cfg.width || 1080;
+      const height = cfg.height || 360;
+      const pad = Object.assign({ l:64, r:24, t:20, b:44 }, cfg.pad || {});
+      const plotW = width - pad.l - pad.r;
+      const plotH = height - pad.t - pad.b;
+      const xmin = cfg.xmin, xmax = cfg.xmax, ymin = cfg.ymin, ymax = cfg.ymax;
+
+      const x = v => pad.l + (v - xmin) / (xmax - xmin) * plotW;
+      const y = v => pad.t + (1 - (v - ymin) / (ymax - ymin)) * plotH;
+      const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+
+      let out = `<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(cfg.aria || 'chart')}">`;
+
+      (cfg.yTicks || []).forEach(t => {
+        out += `<line x1="${pad.l}" y1="${y(t).toFixed(2)}" x2="${width-pad.r}" y2="${y(t).toFixed(2)}" stroke="rgba(16,35,59,.10)" stroke-width="1"/>`;
+        out += `<text x="${pad.l-12}" y="${(y(t)+4).toFixed(2)}" fill="#617286" font-size="11" text-anchor="end" font-weight="600" font-family="Inter, system-ui, sans-serif">${esc(cfg.yFmt ? cfg.yFmt(t) : t)}</text>`;
+      });
+
+      (cfg.xTicks || []).forEach(t => {
+        out += `<line x1="${x(t).toFixed(2)}" y1="${pad.t}" x2="${x(t).toFixed(2)}" y2="${height-pad.b}" stroke="rgba(16,35,59,.08)" stroke-width="1"/>`;
+        out += `<text x="${x(t).toFixed(2)}" y="${height-14}" fill="#617286" font-size="11" text-anchor="middle" font-weight="600" font-family="Inter, system-ui, sans-serif">${esc(cfg.xFmt ? cfg.xFmt(t) : t)}</text>`;
+      });
+
+      (cfg.areas || []).forEach(a => {
+        const lowFn = typeof a.low === 'function' ? a.low : (() => a.low);
+        const highFn = typeof a.high === 'function' ? a.high : (() => a.high);
+        const path = areaPath(cfg.data, p => x(cfg.xValue(p)), p => y(lowFn(p)), p => y(highFn(p)));
+        if (path) out += `<path d="${path}" fill="${a.fill || 'rgba(47,111,237,.12)'}" stroke="none"/>`;
+      });
+
+      (cfg.hLines || []).forEach(h => {
+        out += `<line x1="${pad.l}" y1="${y(h.y).toFixed(2)}" x2="${width-pad.r}" y2="${y(h.y).toFixed(2)}" stroke="${h.color || '#617286'}" stroke-width="${h.width || 1.2}" ${h.dash ? `stroke-dasharray="${h.dash}"` : ''}/>`;
+        if (h.text) {
+          out += `<text x="${width-pad.r-4}" y="${(y(h.y)-6).toFixed(2)}" fill="${h.color || '#617286'}" font-size="10" text-anchor="end" font-weight="700" font-family="Inter, system-ui, sans-serif">${esc(h.text)}</text>`;
+        }
+      });
+
+      (cfg.vLines || []).forEach(vl => {
+        out += `<line x1="${x(vl.x).toFixed(2)}" y1="${pad.t}" x2="${x(vl.x).toFixed(2)}" y2="${height-pad.b}" stroke="${vl.color || '#617286'}" stroke-width="${vl.width || 1.2}" ${vl.dash ? `stroke-dasharray="${vl.dash}"` : ''}/>`;
+        if (vl.text) {
+          out += `<text x="${(x(vl.x)+4).toFixed(2)}" y="${pad.t+12}" fill="${vl.color || '#617286'}" font-size="10" text-anchor="start" font-weight="700" font-family="Inter, system-ui, sans-serif">${esc(vl.text)}</text>`;
+        }
+      });
+
+      (cfg.series || []).forEach(s => {
+        const d = linePath(cfg.data, p => x(cfg.xValue(p)), p => y(s.value(p)));
+        if (d) out += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width || 2.5}" stroke-linecap="round" stroke-linejoin="round" opacity="${s.opacity || 1}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`;
+      });
+
+      (cfg.markers || []).forEach(m => {
+        out += `<circle cx="${x(m.x).toFixed(2)}" cy="${y(m.y).toFixed(2)}" r="${m.r || 4.2}" fill="${m.color || '#0f1c2d'}" stroke="#fff" stroke-width="2"/>`;
+        if (m.text) {
+          out += `<text x="${(x(m.x)+(m.dx||8)).toFixed(2)}" y="${(y(m.y)+(m.dy||-8)).toFixed(2)}" fill="${m.color || '#0f1c2d'}" font-size="10" text-anchor="start" font-weight="800" font-family="Inter, system-ui, sans-serif">${esc(m.text)}</text>`;
+        }
+      });
+
+      (cfg.labels || []).forEach(lb => {
+        out += `<text x="${x(lb.x).toFixed(2)}" y="${y(lb.y).toFixed(2)}" fill="${lb.color || '#0f1c2d'}" font-size="10" text-anchor="${lb.anchor || 'start'}" font-weight="800" font-family="Inter, system-ui, sans-serif">${esc(lb.text)}</text>`;
+      });
+
+      out += '</svg>';
+      return out;
+    }
+
+    function initGauge(){
+      const low = DATA.core.current.fairLow;
+      const high = DATA.core.current.fairHigh;
+      const median = DATA.core.current.fairMedian;
+      const spot = DATA.core.current.ptaxSell;
+      const min = 3.8, max = 6.0;
+      const pct = v => ((v - min) / (max - min) * 100);
+      const band = document.getElementById('gauge-band');
+      band.style.left = pct(low) + '%';
+      band.style.width = (pct(high) - pct(low)) + '%';
+      document.getElementById('gauge-median').style.left = pct(median) + '%';
+      document.getElementById('gauge-spot').style.left = pct(spot) + '%';
+
+      document.getElementById('gauge-low').style.left = pct(low) + '%';
+      document.getElementById('gauge-med').style.left = pct(median) + '%';
+      document.getElementById('gauge-high').style.left = pct(high) + '%';
+      document.getElementById('gauge-current').style.left = pct(spot) + '%';
+    }
+
+    function renderReerBandChart(){
+      const data = DATA.core.history.map(d => ({ year:d.year, reer:d.reer }));
+      const p25 = DATA.core.current.reerP25;
+      const p75 = DATA.core.current.reerP75;
+      const median = DATA.core.current.reerMedian;
+      document.getElementById('reer-band-chart').innerHTML = makeChart({
+        data,
+        xValue: d => d.year,
+        xmin: data[0].year, xmax: data[data.length-1].year,
+        ymin: 60, ymax: 180,
+        xTicks: [2000,2004,2008,2012,2016,2020,2024,2026],
+        yTicks: [70,90,110,130,150,170],
+        yFmt: v => fmtNum(v,0),
+        areas: [{ low:p25, high:p75, fill:'rgba(47,111,237,.14)' }],
+        hLines: [{ y:median, color:COLORS.blue, dash:'6 5', text:'mediana' }],
+        series: [{ value:d => d.reer, color:COLORS.navy, width:2.8 }],
+        markers: [{ x:2026, y:data[data.length-1].reer, color:COLORS.navy, text:'Fev/26' }],
+        vLines: [
+          { x:2002, color:'rgba(207,75,70,.45)', dash:'4 4', text:'2002' },
+          { x:2011, color:'rgba(29,155,95,.45)', dash:'4 4', text:'2011' }
+        ],
+        aria:'REER do Brasil com banda interquartil'
+      });
+    }
+
+    function renderNominalBandChart(){
+      const data = DATA.core.valuationHistory.map(d => ({ year:d.year, spot:d.spot, low:d.fairLow, high:d.fairHigh, median:d.fairMedian }));
+      document.getElementById('nominal-band-chart').innerHTML = makeChart({
+        data,
+        xValue: d => d.year,
+        xmin: data[0].year, xmax: data[data.length-1].year,
+        ymin: 1.4, ymax: 6.4,
+        xTicks: [2000,2004,2008,2012,2016,2020,2024,2026],
+        yTicks: [1.5,2.5,3.5,4.5,5.5,6.0],
+        yFmt: v => fmtBRL(v).replace('R$ ',''),
+        areas: [{ low:d => d.low, high:d => d.high, fill:'rgba(47,111,237,.13)' }],
+        series: [
+          { value:d => d.median, color:COLORS.blue, width:2.4, dash:'6 5' },
+          { value:d => d.spot, color:COLORS.gold, width:3.0 }
+        ],
+        markers: [{ x:2026, y:data[data.length-1].spot, color:COLORS.gold, text:'spot atual' }],
+        vLines: [
+          { x:2002, color:'rgba(207,75,70,.45)', dash:'4 4', text:'2002' },
+          { x:2011, color:'rgba(29,155,95,.45)', dash:'4 4', text:'2011' }
+        ],
+        aria:'BRL USD nominal com banda implícita do REER'
+      });
+    }
+
+    function gapClass(v){
+      if (v > 5) return 'gap-weak';
+      if (v < -5) return 'gap-strong';
+      return 'gap-flat';
+    }
+
+    function renderModelBars(){
+      const models = [...DATA.legacy.models].sort((a,b) => a.fair - b.fair);
+      const min = 3.5, max = 6.3;
+      const pct = v => ((v - min) / (max - min) * 100);
+      const spotPct = pct(DATA.core.current.ptaxSell);
+      const html = models.map(m => `
+        <div class="model-row">
+          <div class="model-name" style="color:${m.color}">${m.name}</div>
+          <div class="track">
+            <div class="fill" style="width:${pct(m.fair)}%; background:${m.color}"></div>
+            <div class="spot-marker" style="left:${spotPct}%"></div>
+          </div>
+          <div class="model-val">${fmtBRL(m.fair)}</div>
+        </div>
+      `).join('');
+      document.getElementById('model-bars').innerHTML = html;
+    }
+
+    function renderModelTable(){
+      const rows = [...DATA.legacy.models].sort((a,b) => a.fair - b.fair).map(m => `
+        <tr>
+          <td style="font-weight:700;color:${m.color}">${m.name}</td>
+          <td class="num">${fmtBRL(m.fair)}</td>
+          <td class="num ${gapClass(m.gapPctVsPtax)}">${fmtPct(m.gapPctVsPtax)}</td>
+          <td class="num">${fmtPct(m.rmse)}</td>
+        </tr>
+      `).join('');
+      document.getElementById('model-table-body').innerHTML = rows;
+    }
+
+    function renderModelChips(){
+      document.getElementById('model-chip-row').innerHTML = DATA.legacy.models.map(m => `
+        <button class="chip ${STATE.visibleModels.has(m.id) ? 'active' : ''}" data-model-id="${m.id}" style="${STATE.visibleModels.has(m.id) ? `color:${m.color}` : ''}">${m.name.replace(' (bruto)','').replace(' (ajust.)','')}</button>
+      `).join('');
+    }
+
+    function renderAllModelsChart(){
+      const data = DATA.legacy.monthly;
+      const visible = DATA.legacy.models.filter(m => STATE.visibleModels.has(m.id));
+      const series = visible.map(m => ({
+        value: d => d[m.id],
+        color: m.color,
+        width: m.id === 'jera' ? 2.8 : 1.5,
+        opacity: m.id === 'jera' ? 0.95 : 0.75
+      }));
+      series.push({ value:d => d.consW, color:COLORS.navy, width:2.0, opacity:.85, dash:'6 5' });
+      series.push({ value:d => d.act, color:COLORS.gold, width:3.2, opacity:1 });
+
+      document.getElementById('all-models-chart').innerHTML = makeChart({
+        data,
+        xValue: d => d.t,
+        xmin: 2000, xmax: 2026.17,
+        ymin: 1.4, ymax: 6.5,
+        xTicks: [2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024,2026],
+        yTicks: [1.5,2.5,3.5,4.5,5.5,6.0],
+        yFmt: v => fmtBRL(v).replace('R$ ',''),
+        vLines: [
+          { x:2002.75, color:'rgba(207,75,70,.40)', dash:'4 4', text:'2002' },
+          { x:2011.5, color:'rgba(29,155,95,.40)', dash:'4 4', text:'2011' },
+          { x:2020.33, color:'rgba(207,75,70,.40)', dash:'4 4', text:'2020' },
+          { x:2025.00, color:'rgba(207,75,70,.40)', dash:'4 4', text:'2025' }
+        ],
+        series,
+        labels: [
+          { x:2026.10, y:data[data.length-1].act - 0.10, text:'spot', color:COLORS.gold, anchor:'end' },
+          { x:2026.10, y:data[data.length-1].consW + 0.12, text:'consenso', color:COLORS.navy, anchor:'end' }
+        ],
+        aria:'Painel comparativo de valuation 2000-Q1 2026'
+      });
+    }
+
+    function applyModelPreset(name){
+      const ids = MODEL_PRESETS[name];
+      STATE.visibleModels = new Set(ids);
+      document.querySelectorAll('[data-model-preset]').forEach(btn => btn.classList.toggle('active', btn.dataset.modelPreset === name));
+      renderModelChips();
+      renderAllModelsChart();
+      bindModelChipEvents();
+    }
+
+    function hybridInputs(){
+      return {
+        dxy: parseFloat(document.getElementById('dxy').value),
+        betaDxy: parseFloat(document.getElementById('beta-dxy').value),
+        prodGap: parseFloat(document.getElementById('prod-gap').value),
+        betaProd: parseFloat(document.getElementById('beta-prod').value)
+      };
+    }
+
+    function computeHybrid(vals){
+      const fairReer = DATA.hybrid.fairReer;
+      const fairDxy = fairReer * Math.pow(vals.dxy / DATA.hybrid.neutral, vals.betaDxy);
+      const fairProd = fairDxy * Math.exp(vals.betaProd * (vals.prodGap / 100));
+      return {
+        fairReer,
+        fairDxy,
+        fairProd,
+        gapReer: (DATA.core.current.ptaxSell / fairReer - 1) * 100,
+        gapDxy: (DATA.core.current.ptaxSell / fairDxy - 1) * 100,
+        gapProd: (DATA.core.current.ptaxSell / fairProd - 1) * 100
+      };
+    }
+
+    function renderHybrid(){
+      const vals = hybridInputs();
+      const res = computeHybrid(vals);
+
+      document.getElementById('dxy-out').textContent = fmtNum(vals.dxy,1);
+      document.getElementById('beta-dxy-out').textContent = fmtNum(vals.betaDxy,2);
+      document.getElementById('prod-gap-out').textContent = (vals.prodGap > 0 ? '+' : '') + fmtNum(vals.prodGap,0) + '%';
+      document.getElementById('beta-prod-out').textContent = fmtNum(vals.betaProd,2);
+
+      document.getElementById('hyb-reer-val').textContent = fmtBRL(res.fairReer);
+      document.getElementById('hyb-dxy-val').textContent = fmtBRL(res.fairDxy);
+      document.getElementById('hyb-prod-val').textContent = fmtBRL(res.fairProd);
+
+      const xs = [];
+      for(let d=85; d<=130.0001; d+=1) xs.push({ dxy:Number(d.toFixed(1)) });
+      document.getElementById('hybrid-curve-chart').innerHTML = makeChart({
+        data: xs,
+        xValue: d => d.dxy,
+        xmin: 85, xmax: 130,
+        ymin: 4.0, ymax: 7.2,
+        xTicks: [85,90,95,100,105,110,115,120,125,130],
+        yTicks: [4.0,4.5,5.0,5.5,6.0,6.5,7.0],
+        yFmt: v => fmtBRL(v).replace('R$ ',''),
+        hLines: [{ y:DATA.core.current.ptaxSell, color:COLORS.gold, dash:'5 5', text:'spot atual' }],
+        vLines: [{ x:DATA.hybrid.value, color:COLORS.navy, dash:'5 5', text:'broad dollar atual' }],
+        series: [
+          { value: d => DATA.hybrid.fairReer * Math.pow(d.dxy / DATA.hybrid.neutral, vals.betaDxy), color:COLORS.blue, width:2.5 },
+          { value: d => DATA.hybrid.fairReer * Math.pow(d.dxy / DATA.hybrid.neutral, vals.betaDxy) * Math.exp(vals.betaProd * 0.10), color:COLORS.violet, width:2.2 },
+          { value: d => DATA.hybrid.fairReer * Math.pow(d.dxy / DATA.hybrid.neutral, vals.betaDxy) * Math.exp(vals.betaProd * 0.20), color:COLORS.pink, width:2.2 },
+          { value: d => DATA.hybrid.fairReer * Math.pow(d.dxy / DATA.hybrid.neutral, vals.betaDxy) * Math.exp(vals.betaProd * (vals.prodGap / 100)), color:COLORS.navy, width:3.4 }
+        ],
+        markers: [
+          { x:vals.dxy, y:res.fairDxy, color:COLORS.blue, text:'REER + dólar' },
+          { x:vals.dxy, y:res.fairProd, color:COLORS.navy, text:'curva custom', dx:8, dy:-10 }
+        ],
+        aria:'Curvas híbridas de justo vs dólar global'
+      });
+    }
+
+    function activateHybridPreset(name){
+      const p = HYBRID_PRESETS[name];
+      if (!p) return;
+      document.getElementById('dxy').value = p.dxy;
+      document.getElementById('beta-dxy').value = p.betaDxy;
+      document.getElementById('prod-gap').value = p.prodGap;
+      document.getElementById('beta-prod').value = p.betaProd;
+      document.querySelectorAll('[data-hybrid-preset]').forEach(btn => btn.classList.toggle('active', btn.dataset.hybridPreset === name));
+      renderHybrid();
+    }
+
+
+    function labInputs(){
+      return {
+        anchor: parseFloat(document.getElementById('lab-anchor').value),
+        dxy: parseFloat(document.getElementById('lab-dxy').value),
+        cds: parseFloat(document.getElementById('lab-cds').value),
+        carry: parseFloat(document.getElementById('lab-carry').value),
+        comm: parseFloat(document.getElementById('lab-comm').value),
+        prod: parseFloat(document.getElementById('lab-prod').value)
+      };
+    }
+
+    function labCalc(vals, horizon){
+      const s = LAB_SENS[horizon];
+      const factors = {
+        dxy: Math.pow(vals.dxy / LAB_NEUTRALS.dxy, s.dxy),
+        cds: Math.exp(s.cds * ((vals.cds - LAB_NEUTRALS.cds) / 100)),
+        carry: Math.exp(-s.carry * (vals.carry - LAB_NEUTRALS.carry)),
+        comm: Math.pow(vals.comm / LAB_NEUTRALS.comm, -s.comm),
+        prod: Math.exp(s.prod * (vals.prod / 100))
+      };
+      const fair = vals.anchor * factors.dxy * factors.cds * factors.carry * factors.comm * factors.prod;
+      return { fair, factors };
+    }
+
+    function labAll(vals){
+      return {
+        y1: labCalc(vals, 1),
+        y3: labCalc(vals, 3),
+        y5: labCalc(vals, 5),
+        y10: labCalc(vals, 10)
+      };
+    }
+
+    function labContrib(vals, horizon){
+      const calc = labCalc(vals, horizon);
+      const steps = [];
+      let running = vals.anchor;
+      [
+        { key:'dxy', label:'Dólar global', color:COLORS.orange },
+        { key:'cds', label:'CDS Brasil', color:COLORS.red },
+        { key:'carry', label:'Carry real', color:COLORS.green },
+        { key:'comm', label:'Commodities', color:COLORS.cyan },
+        { key:'prod', label:'Produtividade', color:COLORS.violet }
+      ].forEach(item => {
+        const next = running * calc.factors[item.key];
+        const delta = next - running;
+        steps.push(Object.assign({}, item, { delta, after: next }));
+        running = next;
+      });
+      return { fair: running, steps };
+    }
+
+    function labBlendColor(t){
+      const hue = 145 - 135 * t;
+      const sat = 62;
+      const light = 95 - 22 * t;
+      return `hsl(${hue}, ${sat}%, ${light}%)`;
+    }
+
+    function renderLabBars(vals){
+      const info = labContrib(vals, LAB_STATE.horizon);
+      const maxAbs = Math.max(0.12, ...info.steps.map(s => Math.abs(s.delta)));
+      const rows = info.steps.map(s => {
+        const width = Math.max(5, Math.round(Math.abs(s.delta) / maxAbs * 100));
+        const cls = s.delta >= 0 ? 'pos' : 'neg';
+        const color = s.delta >= 0 ? (s.key === 'dxy' ? COLORS.orange : COLORS.red) : (s.key === 'comm' ? COLORS.cyan : COLORS.green);
+        return `
+          <div class="wf-row">
+            <div class="wf-label">${s.label}</div>
+            <div class="wf-track"><span class="wf-bar ${cls}" style="width:${width}%;background:${color}"></span></div>
+            <div class="wf-val" style="color:${s.delta >= 0 ? COLORS.red : COLORS.green}">${s.delta >= 0 ? '+' : ''}${fmtBRL(s.delta).replace('R$ ','')}</div>
+          </div>
+        `;
+      }).join('');
+      const gapPct = (info.fair / DATA.core.current.ptaxSell - 1) * 100;
+      document.getElementById('lab-contrib-bars').innerHTML = `
+        <div class="wf-head">
+          <div class="left">Âncora REER<br><strong style="color:${COLORS.navy};font-size:18px">${fmtBRL(vals.anchor)}</strong></div>
+          <div class="right">${fmtBRL(info.fair)}</div>
+        </div>
+        ${rows}
+        <div class="wf-total">
+          <div>
+            <div class="cap">Justo implicado</div>
+            <div class="copy" style="margin-top:4px;color:var(--muted)">${LAB_STATE.horizon === 1 ? '12 meses' : LAB_STATE.horizon + ' anos'} · desvio vs spot atual <strong style="color:${gapPct >= 0 ? COLORS.red : COLORS.green}">${fmtPct(gapPct)}</strong></div>
+          </div>
+          <div class="num">${fmtBRL(info.fair)}</div>
+        </div>
+      `;
+      const posDrivers = info.steps.filter(s => s.delta > 0).sort((a,b) => b.delta - a.delta);
+      const negDrivers = info.steps.filter(s => s.delta < 0).sort((a,b) => a.delta - b.delta);
+      const up = posDrivers[0] ? `${posDrivers[0].label} adiciona ${fmtBRL(posDrivers[0].delta)}` : 'Nenhum driver altista relevante';
+      const down = negDrivers[0] ? `${negDrivers[0].label} retira ${fmtBRL(Math.abs(negDrivers[0].delta))}` : 'Nenhum driver baixista relevante';
+      document.getElementById('lab-readout').innerHTML = `<strong>Leitura:</strong> ${up}. ${down}. A partir da âncora de ${fmtBRL(vals.anchor)}, o modelo chega a ${fmtBRL(info.fair)} no horizonte de ${LAB_STATE.horizon === 1 ? '12 meses' : LAB_STATE.horizon + ' anos'}.`;
+      return info;
+    }
+
+    function buildLabPath(vals){
+      const all = labAll(vals);
+      const anchors = [
+        { year: 2026, value: DATA.core.current.ptaxSell },
+        { year: 2027, value: all.y1.fair },
+        { year: 2029, value: all.y3.fair },
+        { year: 2031, value: all.y5.fair },
+        { year: 2036, value: all.y10.fair }
+      ];
+      const out = [];
+      for(let year=2026; year<=2036; year++){
+        let val = anchors[anchors.length-1].value;
+        for(let i=0;i<anchors.length-1;i++){
+          const a = anchors[i], b = anchors[i+1];
+          if (year >= a.year && year <= b.year){
+            const r = (year - a.year) / (b.year - a.year || 1);
+            val = a.value + r * (b.value - a.value);
+            break;
+          }
+        }
+        out.push({ year, path: val, low: val * 0.94, high: val * 1.06, spot: DATA.core.current.ptaxSell });
+      }
+      return { anchors, out, all };
+    }
+
+    function renderLabPath(vals){
+      const built = buildLabPath(vals);
+      document.getElementById('lab-path-chart').innerHTML = makeChart({
+        data: built.out,
+        xValue: d => d.year,
+        xmin: 2026, xmax: 2036,
+        ymin: Math.min(4.0, ...built.out.map(d => d.low)) - 0.1,
+        ymax: Math.max(8.8, ...built.out.map(d => d.high)) + 0.1,
+        xTicks: [2026,2027,2028,2029,2030,2031,2032,2033,2034,2035,2036],
+        yTicks: [4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5],
+        yFmt: v => fmtBRL(v).replace('R$ ',''),
+        areas: [{ low:d => d.low, high:d => d.high, fill:'rgba(47,111,237,.14)' }],
+        hLines: [{ y: DATA.core.current.ptaxSell, color: COLORS.gold, dash:'5 5', text:'spot atual' }],
+        series: [{ value:d => d.path, color: COLORS.navy, width: 3.0 }],
+        markers: [
+          { x: 2027, y: built.all.y1.fair, color: COLORS.blue, text:'12m' },
+          { x: 2029, y: built.all.y3.fair, color: COLORS.blue, text:'3a' },
+          { x: 2031, y: built.all.y5.fair, color: COLORS.navy, text:'5a' },
+          { x: 2036, y: built.all.y10.fair, color: COLORS.violet, text:'10a', dx:8, dy:-10 }
+        ],
+        aria:'Trajetória implicada do laboratório de sensibilidade'
+      });
+    }
+
+    function renderLabHeatmap(vals){
+      const dxyVals = [90, 100, 110, 120, 130];
+      const cdsVals = [80, 120, 160, 220, 300];
+      const matrix = [];
+      let mn = Infinity, mx = -Infinity;
+      cdsVals.forEach(cds => {
+        dxyVals.forEach(dxy => {
+          const fair = labCalc(Object.assign({}, vals, { dxy, cds }), 5).fair;
+          mn = Math.min(mn, fair);
+          mx = Math.max(mx, fair);
+          matrix.push({ dxy, cds, fair });
+        });
+      });
+      const nearestDxy = dxyVals.reduce((a,b) => Math.abs(b - vals.dxy) < Math.abs(a - vals.dxy) ? b : a, dxyVals[0]);
+      const nearestCds = cdsVals.reduce((a,b) => Math.abs(b - vals.cds) < Math.abs(a - vals.cds) ? b : a, cdsVals[0]);
+      let html = '<div class="hm-grid">';
+      html += '<div></div>';
+      dxyVals.forEach(v => html += `<div class="hm-head">DXY ${fmtNum(v,0)}</div>`);
+      cdsVals.forEach(cds => {
+        html += `<div class="hm-rowlab">CDS ${fmtNum(cds,0)}</div>`;
+        dxyVals.forEach(dxy => {
+          const cell = matrix.find(m => m.cds===cds && m.dxy===dxy);
+          const t = (cell.fair - mn) / ((mx - mn) || 1);
+          const active = dxy===nearestDxy && cds===nearestCds ? ' active' : '';
+          html += `<div class="hm-cell${active}" style="background:${labBlendColor(t)}"><strong>${fmtBRL(cell.fair).replace('R$ ','')}</strong><span>${cell.fair >= DATA.core.current.ptaxSell ? 'acima do spot' : 'abaixo do spot'}</span></div>`;
+        });
+      });
+      html += '</div>';
+      document.getElementById('lab-heatmap').innerHTML = html;
+    }
+
+    function renderLabInsights(vals){
+      const all = labAll(vals);
+      const five = labContrib(vals, 5);
+      const dominant = [...five.steps].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta))[0];
+      const slope = all.y10.fair - all.y1.fair;
+      const term = slope > 0.15 ? 'trajetória ascendente' : slope < -0.15 ? 'trajetória descendente' : 'trajetória lateralizada';
+      const cards = [
+        {
+          cap: 'Driver dominante',
+          title: dominant ? dominant.label : 'Âncora REER',
+          body: dominant ? `${dominant.delta >= 0 ? 'Empurra' : 'Puxa'} o justo de 5 anos em ${fmtBRL(Math.abs(dominant.delta))}. É o maior deslocamento marginal no conjunto atual de premissas.` : 'Sem driver dominante fora da âncora.'
+        },
+        {
+          cap: 'Estrutura temporal',
+          title: term,
+          body: `O justo sai de ${fmtBRL(all.y1.fair)} em 12 meses para ${fmtBRL(all.y10.fair)} em 10 anos. A diferença resume o balanço entre regime externo, prêmio local e produtividade.`
+        },
+        {
+          cap: 'Leitura prática',
+          title: all.y5.fair >= DATA.core.current.ptaxSell ? 'justo acima do spot' : 'justo abaixo do spot',
+          body: `No horizonte de 5 anos, o laboratório entrega ${fmtBRL(all.y5.fair)} contra spot de ${fmtBRL(DATA.core.current.ptaxSell)}. Isso serve para testar convicções, não para substituir a banda REER.`
+        }
+      ];
+      document.getElementById('lab-insights').innerHTML = cards.map(card => `
+        <div class="driver-card">
+          <div class="cap">${card.cap}</div>
+          <h4>${card.title}</h4>
+          <p>${card.body}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderLab(){
+      const vals = labInputs();
+      const all = labAll(vals);
+      document.getElementById('lab-anchor-out').textContent = fmtNum(vals.anchor,2);
+      document.getElementById('lab-dxy-out').textContent = fmtNum(vals.dxy,1);
+      document.getElementById('lab-cds-out').textContent = fmtNum(vals.cds,0);
+      document.getElementById('lab-carry-out').textContent = fmtNum(vals.carry,1);
+      document.getElementById('lab-comm-out').textContent = fmtNum(vals.comm,0);
+      document.getElementById('lab-prod-out').textContent = (vals.prod > 0 ? '+' : '') + fmtNum(vals.prod,0) + '%';
+
+      document.getElementById('lab-top-spot').textContent = fmtBRL(DATA.core.current.ptaxSell);
+      document.getElementById('lab-top-1y').textContent = fmtBRL(all.y1.fair);
+      document.getElementById('lab-top-3y').textContent = fmtBRL(all.y3.fair);
+      document.getElementById('lab-top-5y').textContent = fmtBRL(all.y5.fair);
+      document.getElementById('lab-top-10y').textContent = fmtBRL(all.y10.fair);
+
+      document.querySelectorAll('[data-lab-hz]').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.labHz) === LAB_STATE.horizon));
+      renderLabBars(vals);
+      renderLabPath(vals);
+      renderLabHeatmap(vals);
+      renderLabInsights(vals);
+    }
+
+    function applyLabPreset(name){
+      const p = LAB_PRESETS[name];
+      if (!p) return;
+      document.getElementById('lab-anchor').value = p.anchor;
+      document.getElementById('lab-dxy').value = p.dxy;
+      document.getElementById('lab-cds').value = p.cds;
+      document.getElementById('lab-carry').value = p.carry;
+      document.getElementById('lab-comm').value = p.comm;
+      document.getElementById('lab-prod').value = p.prod;
+      document.querySelectorAll('[data-lab-preset]').forEach(btn => btn.classList.toggle('active', btn.dataset.labPreset === name));
+      renderLab();
+    }
+
+    function renderScenarioChart(){
+      const data = DATA.core.scenarioSeries;
+      document.getElementById('scenario-chart').innerHTML = makeChart({
+        data,
+        xValue: d => d.year,
+        xmin: 2026, xmax: 2036,
+        ymin: 4.4, ymax: 10.6,
+        xTicks: [2026,2027,2028,2029,2030,2031,2032,2033,2034,2035,2036],
+        yTicks: [4.5,5.5,6.5,7.5,8.5,9.5,10.5],
+        yFmt: v => fmtBRL(v).replace('R$ ',''),
+        areas: [{ low:d => d.low, high:d => d.high, fill:'rgba(176,138,45,.10)' }],
+        series: [
+          { value:d => d.reform, color:COLORS.green, width:2.2, opacity:.9 },
+          { value:d => d.base, color:COLORS.gold, width:2.7, opacity:1 },
+          { value:d => d.fiscal, color:COLORS.red, width:2.2, opacity:.9 },
+          { value:d => d.superdollar, color:COLORS.orange, width:2.4, opacity:.95 },
+          { value:d => d.ev, color:COLORS.blue, width:2.6, opacity:1, dash:'6 5' }
+        ],
+        labels: [
+          { x:2036, y:data[data.length-1].reform - 0.05, text:'benigno', color:COLORS.green, anchor:'end' },
+          { x:2036, y:data[data.length-1].base + 0.12, text:'base', color:COLORS.gold, anchor:'end' },
+          { x:2036, y:data[data.length-1].fiscal + 0.14, text:'fiscal', color:COLORS.red, anchor:'end' },
+          { x:2036, y:data[data.length-1].superdollar + 0.12, text:'super-dólar', color:COLORS.orange, anchor:'end' },
+          { x:2036, y:data[data.length-1].ev - 0.18, text:'E[BRL]', color:COLORS.blue, anchor:'end' }
+        ],
+        aria:'Cenários BRL 2026-2036'
+      });
+    }
+
+    function renderHorizon(){
+      const year = STATE.horizon;
+      document.querySelectorAll('[data-hz]').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.hz) === year));
+      document.getElementById('hz-note').textContent = HZ_NOTES[year];
+      const row = DATA.core.scenarioSeries.find(r => r.year === year);
+      const cards = [
+        { cap:'Benigno', color:COLORS.green, val:row.reform, copy:'Reforma + dólar mais fraco' },
+        { cap:'Base', color:COLORS.gold, val:row.base, copy:'Prêmio doméstico persistente' },
+        { cap:'Fiscal', color:COLORS.red, val:row.fiscal, copy:'Risco soberano mais alto' },
+        { cap:'Super-dólar', color:COLORS.orange, val:row.superdollar, copy:'Dólar global em regime alto' },
+        { cap:'Esperança ponderada', color:COLORS.blue, val:row.ev, copy:'Corredor provável: ' + fmtBRL(row.low) + '–' + fmtBRL(row.high) }
+      ];
+      document.getElementById('horizon-cards').innerHTML = cards.map(c => `
+        <div class="hz-card">
+          <div class="cap" style="color:${c.color}">${c.cap}</div>
+          <div class="val" style="color:${c.color}">${fmtBRL(c.val)}</div>
+          <div class="copy">${c.copy}</div>
+        </div>
+      `).join('');
+    }
+
+    function bindModelChipEvents(){
+      document.querySelectorAll('[data-model-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.modelId;
+          if (STATE.visibleModels.has(id)) STATE.visibleModels.delete(id); else STATE.visibleModels.add(id);
+          document.querySelectorAll('[data-model-preset]').forEach(p => p.classList.remove('active'));
+          renderModelChips();
+          renderAllModelsChart();
+          bindModelChipEvents();
+        });
+      });
+    }
+
+
+    function renderJeraMlSection(){
+      const tbody = document.getElementById('jera-ml-metrics-body');
+      if (!tbody) return;
+      const colors = { jeraML: COLORS.navy, consW: COLORS.blue, legacyJera: COLORS.gold, reerFair: COLORS.cyan };
+      tbody.innerHTML = JERA_ML.holdout.metrics.map(row =>                 '<tr>' +
+          '<td style="color:' + (colors[row.id] || COLORS.ink) + ';font-weight:' + (row.id === 'jeraML' ? '700' : '500') + '">' + row.label + '</td>' +
+          '<td class="num" style="font-weight:700">' + row.rmse.toFixed(3) + '</td>' +
+          '<td class="num">' + row.mae.toFixed(3) + '</td>' +
+          '<td class="num">' + (row.r2 >= 0 ? '+' : '') + row.r2.toFixed(3) + '</td>' +
+        '</tr>'
+      ).join('');
+
+      document.getElementById('jera-ml-rmse-chart').innerHTML = makeChart({
+        data: JERA_ML.holdout.metrics,
+        xValue: (_, i) => i + 1,
+        xmin: 0.5, xmax: JERA_ML.holdout.metrics.length + 0.5,
+        ymin: 0, ymax: Math.max(...JERA_ML.holdout.metrics.map(d => d.rmse)) * 1.20,
+        xTicks: JERA_ML.holdout.metrics.map((_,i) => i + 1),
+        xFmt: (v) => {
+          const idx = Math.round(v) - 1;
+          const row = JERA_ML.holdout.metrics[idx];
+          return row ? row.label : '';
+        },
+        yTicks: [0,0.2,0.4,0.6,0.8],
+        series: JERA_ML.holdout.metrics.map((row, idx) => ({
+          value: d => d.rmse,
+          color: row.id === 'jeraML' ? COLORS.navy : row.id === 'consW' ? COLORS.blue : row.id === 'legacyJera' ? COLORS.gold : COLORS.cyan,
+          width: 10,
+          type: 'bar',
+          onlyIndex: idx
+        })),
+        aria: 'Comparação de RMSE do sinal tático'
+      });
+
+      // Custom simple bars instead of relying on chart bar support
+      const rmseWrap = document.getElementById('jera-ml-rmse-chart');
+      const maxRmse = Math.max(...JERA_ML.holdout.metrics.map(d => d.rmse));
+      rmseWrap.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:end;height:220px">' + JERA_ML.holdout.metrics.map(row => {
+        const h = Math.max(18, Math.round(row.rmse / maxRmse * 150));
+        const color = row.id === 'jeraML' ? COLORS.navy : row.id === 'consW' ? COLORS.blue : row.id === 'legacyJera' ? COLORS.gold : COLORS.cyan;
+        return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">' +
+          '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">' + row.rmse.toFixed(3) + '</div>' +
+          '<div style="width:100%;max-width:96px;height:' + h + 'px;background:' + color + ';border-radius:12px 12px 4px 4px;opacity:' + (row.id==='jeraML' ? '1' : '.78') + '"></div>' +
+          '<div style="font-size:12px;color:var(--ink);text-align:center;margin-top:8px;line-height:1.35">' + row.label + '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+
+      const s = JERA_ML.series;
+      document.getElementById('jera-ml-chart').innerHTML = makeChart({
+        data: s,
+        xValue: d => d.t,
+        xmin: s[0].t, xmax: s[s.length - 1].t,
+        ymin: 4.5, ymax: 6.3,
+        xTicks: [2024,2024.5,2025,2025.5,2026],
+        xFmt: v => String(Math.floor(v)),
+        yTicks: [4.5,5.0,5.5,6.0],
+        yFmt: v => fmtBRL(v).replace('R$ ',''),
+        series: [
+          { value: d => d.act, color: COLORS.gold, width: 3.5 },
+          { value: d => d.jeraML, color: COLORS.navy, width: 3.0 },
+          { value: d => d.consW, color: COLORS.blue, width: 2.0, dash: '6 4' },
+          { value: d => d.legacyJera, color: COLORS.cyan, width: 2.0, dash: '4 4' },
+          { value: d => d.reerFair, color: COLORS.violet, width: 2.0, dash: '2 5' }
+        ],
+        labels: [
+          { x: s[s.length - 1].t - 0.02, y: s[s.length - 1].act - 0.06, text: 'spot', color: COLORS.gold, anchor: 'end' },
+          { x: s[s.length - 1].t - 0.02, y: s[s.length - 1].jeraML + 0.06, text: 'Sinal tático', color: COLORS.navy, anchor: 'end' }
+        ],
+        aria: 'Backtest do sinal tático de 2024 a 2026'
+      });
+    }
+
+    function bindEvents(){
+      document.querySelectorAll('[data-model-preset]').forEach(btn => {
+        btn.addEventListener('click', () => applyModelPreset(btn.dataset.modelPreset));
+      });
+      document.querySelectorAll('[data-hybrid-preset]').forEach(btn => {
+        btn.addEventListener('click', () => activateHybridPreset(btn.dataset.hybridPreset));
+      });
+      ['dxy','beta-dxy','prod-gap','beta-prod'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          document.querySelectorAll('[data-hybrid-preset]').forEach(btn => btn.classList.remove('active'));
+          renderHybrid();
+        });
+      });
+      document.querySelectorAll('[data-hz]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          STATE.horizon = Number(btn.dataset.hz);
+          renderHorizon();
+        });
+      });
+      document.querySelectorAll('[data-lab-preset]').forEach(btn => {
+        btn.addEventListener('click', () => applyLabPreset(btn.dataset.labPreset));
+      });
+      ['lab-anchor','lab-dxy','lab-cds','lab-carry','lab-comm','lab-prod'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          document.querySelectorAll('[data-lab-preset]').forEach(btn => btn.classList.remove('active'));
+          renderLab();
+        });
+      });
+      document.querySelectorAll('[data-lab-hz]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          LAB_STATE.horizon = Number(btn.dataset.labHz);
+          renderLab();
+        });
+      });
+    }
+
+    function boot(){
+      initGauge();
+      renderReerBandChart();
+      renderNominalBandChart();
+      renderJeraMlSection();
+      renderModelBars();
+      renderModelTable();
+      renderModelChips();
+      renderAllModelsChart();
+      bindModelChipEvents();
+      renderHybrid();
+      renderLab();
+      renderScenarioChart();
+      renderHorizon();
+      bindEvents();
+    }
+
+    boot();
+  </script>
+</body>
+</html>

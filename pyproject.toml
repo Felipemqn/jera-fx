@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jera-fx-foundation"
+version = "0.1.0"
+description = "Phase 2 foundation for the JERA BRL/USD platform."
+readme = "README_START_HERE.md"
+requires-python = ">=3.12"
+dependencies = [
+  "alembic>=1.14.0",
+  "fastapi>=0.115.0",
+  "httpx>=0.28.0",
+  "openpyxl>=3.1.5",
+  "pandas>=2.2.3",
+  "psycopg[binary]>=3.2.3",
+  "pydantic-settings>=2.6.1",
+  "pyyaml>=6.0.2",
+  "sqlalchemy>=2.0.36",
+  "uvicorn>=0.32.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.4",
+  "pytest-asyncio>=0.24.0",
+]
+
+[project.scripts]
+jera-fx = "jera_fx_api.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+  "src/jera_fx_api",
+  "src/jera_fx_connectors",
+  "src/jera_fx_features",
+  "src/jera_fx_registry",
+]
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+markers = [
+  "postgres_integration: requires JERA_PG_TEST_DATABASE_URL pointing to a real local PostgreSQL database",
+]
+pythonpath = ["src"]
+testpaths = ["tests"]

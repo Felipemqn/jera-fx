@@ -1,0 +1,2 @@
+"""Series catalog access."""
+

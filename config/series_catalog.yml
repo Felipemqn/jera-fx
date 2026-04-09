@@ -1,0 +1,617 @@
+sources:
+  - source_key: bis_reer_local_seed
+    provider: BIS/Bruegel local seed workbook
+    base_url: local-file
+    official: true
+    source_type: seed-local
+    production_ingestion_approved: true
+    required_configuration: []
+    release_metadata_behavior: workbook update header
+    notes: Local workbook seed source for BRL REER and NEER history. Prototype HTML files are reference-only and not a source.
+    connection:
+      type: workbook
+  - source_key: bcb_ptax_odata
+    provider: Banco Central do Brasil
+    base_url: https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata
+    official: true
+    source_type: official public
+    production_ingestion_approved: true
+    required_configuration: []
+    release_metadata_behavior: intraday bulletin timestamp
+    notes: Official PTAX OData service for BRL/USD buy and sell quotations.
+    connection:
+      type: odata
+      endpoint: CotacaoDolarPeriodo
+  - source_key: bcb_sgs_api
+    provider: Banco Central do Brasil
+    base_url: https://api.bcb.gov.br/dados/serie
+    official: true
+    source_type: official public
+    production_ingestion_approved: true
+    required_configuration: []
+    release_metadata_behavior: observation date only
+    notes: Official SGS API for macroeconomic time series.
+    connection:
+      type: rest-json
+      endpoint_template: bcdata.sgs.{source_code}/dados
+  - source_key: bcb_expectativas_odata
+    provider: Banco Central do Brasil
+    base_url: https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata
+    official: true
+    source_type: official public
+    production_ingestion_approved: true
+    required_configuration: []
+    release_metadata_behavior: survey date only
+    notes: Official OData service for Focus and Expectativas de Mercado snapshots.
+    connection:
+      type: odata
+  - source_key: fed_h10_datadownload
+    provider: Board of Governors of the Federal Reserve System
+    base_url: https://www.federalreserve.gov/datadownload/Output.aspx
+    official: true
+    source_type: primary public
+    production_ingestion_approved: true
+    required_configuration: []
+    release_metadata_behavior: observation date proxy from daily H.10 package
+    notes: Official Federal Reserve H.10 Data Download Program package for daily dollar indexes. Not FRED or ALFRED.
+    connection:
+      type: csv-package
+      rel: H10
+      package_series: 122e3bcb627e8e53f1bf72a1a09cfb81
+      filetype: csv
+      label: include
+      layout: seriescolumn
+      package_type: package
+      lastobs: 10000
+  - source_key: approved_internal_cds_file_drop
+    provider: internal_manual_upload
+    base_url: file-drop
+    official: false
+    source_type: approved internal
+    source_mode: approved_internal_file_drop
+    automation_mode: manual_batch
+    production_ingestion_approved: true
+    required_configuration: []
+    release_metadata_behavior: file drop has no release timestamp
+    notes: Approved internal manual CSV file drop for Brazil 5Y CDS. This source is file-based, not API-based, not live, and approved only for manual-batch ingestion.
+    connection:
+      type: csv-file-drop
+      file_format: csv
+      default_path: data/raw/cds/BRGV5YUSAC=R_2026-04-07.csv
+      source_symbol: BRGV5YUSAC=R
+      expected_columns:
+        - Date
+        - Price
+        - Open
+        - High
+        - Low
+        - Change %
+      canonical_value_field: Price
+      date_frequency: daily
+
+series:
+  - series_key: reer_120_br
+    source_key: bis_reer_local_seed
+    source_code: REER_120_BR
+    provider: BIS/Bruegel local seed workbook
+    frequency: monthly
+    units: index
+    release_metadata_behavior: workbook update header
+    transformation_rules:
+      ingestion:
+        workbook_sheet: REER_MONTHLY_120
+        date_pattern: YYYYMM
+        reference_month_end: true
+      canonical_normalization:
+        anchor_year: 2020
+        method: average-of-calendar-year
+    display_metadata:
+      label: BRL REER broad
+      audience: client-and-investment
+      client_default_scale: canonical-2020avg100
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: canonical-2020avg100
+      conversion_rule: native_value * 100 / mean(native_value over calendar year 2020)
+  - series_key: reer_51_br
+    source_key: bis_reer_local_seed
+    source_code: REER_51_BR
+    provider: BIS/Bruegel local seed workbook
+    frequency: monthly
+    units: index
+    release_metadata_behavior: workbook update header
+    transformation_rules:
+      ingestion:
+        workbook_sheet: REER_MONTHLY_51
+        date_pattern: YYYYMM
+        reference_month_end: true
+      canonical_normalization:
+        anchor_year: 2020
+        method: average-of-calendar-year
+    display_metadata:
+      label: BRL REER narrow
+      audience: client-and-investment
+      client_default_scale: canonical-2020avg100
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: canonical-2020avg100
+      conversion_rule: native_value * 100 / mean(native_value over calendar year 2020)
+  - series_key: ptax_usd_brl_buy
+    source_key: bcb_ptax_odata
+    source_code: cotacaoCompra
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: BRL per USD
+    release_metadata_behavior: dataHoraCotacao
+    transformation_rules:
+      ingestion:
+        datetime_field: dataHoraCotacao
+        value_field: cotacaoCompra
+        reference_month_end: true
+      curated_monthly:
+        policy: last-available-daily-close
+    display_metadata:
+      label: PTAX USD/BRL buy
+      audience: audit
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: ptax_usd_brl_sell
+    source_key: bcb_ptax_odata
+    source_code: cotacaoVenda
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: BRL per USD
+    release_metadata_behavior: dataHoraCotacao
+    transformation_rules:
+      ingestion:
+        datetime_field: dataHoraCotacao
+        value_field: cotacaoVenda
+        reference_month_end: true
+      curated_monthly:
+        policy: last-available-daily-close
+    display_metadata:
+      label: PTAX USD/BRL sell
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: cds_brazil_5y
+    source_key: approved_internal_cds_file_drop
+    source_code: BRGV5YUSAC=R
+    provider: internal_manual_upload
+    frequency: daily
+    units: basis_points
+    release_metadata_behavior: file drop has no release timestamp
+    transformation_rules:
+      ingestion:
+        file_format: csv
+        date_field: Date
+        value_field: Price
+        source_symbol: BRGV5YUSAC=R
+        expected_columns:
+          - Date
+          - Price
+          - Open
+          - High
+          - Low
+          - Change %
+        parse_fields:
+          open: Open
+          high: High
+          low: Low
+          change_percent: Change %
+        reference_month_end: true
+      curated_monthly:
+        policy: monthly-average
+    display_metadata:
+      label: Brazil 5Y CDS
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: broad_usd_index
+    source_key: fed_h10_datadownload
+    source_code: JRXWTFB_N.B
+    provider: Board of Governors of the Federal Reserve System
+    frequency: daily
+    units: index
+    release_metadata_behavior: observation date proxy from daily H.10 package
+    transformation_rules:
+      ingestion:
+        date_field: Time Period
+        value_field: JRXWTFB_N.B
+        package_series: 122e3bcb627e8e53f1bf72a1a09cfb81
+        package_label: H.10 Statistical Release - Daily Indexes
+        reference_month_end: true
+      curated_monthly:
+        policy: last-available-daily-close
+    display_metadata:
+      label: Nominal broad dollar index
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: sgs_selic_target_rate
+    source_key: bcb_sgs_api
+    source_code: "432"
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: percent per year
+    release_metadata_behavior: observation date only
+    transformation_rules:
+      ingestion:
+        date_format: dd/MM/yyyy
+        value_field: valor
+        reference_month_end: true
+    display_metadata:
+      label: Selic target rate
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: commodity_terms_of_trade
+    source_key: bcb_sgs_api
+    source_code: "29042"
+    provider: Banco Central do Brasil
+    frequency: monthly
+    units: index
+    release_metadata_behavior: observation date only
+    transformation_rules:
+      ingestion:
+        date_format: dd/MM/yyyy
+        value_field: valor
+        reference_month_end: true
+    display_metadata:
+      label: Commodity Index - Brazil (IC-Br) in US Dollars
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: sgs_ipca_12m
+    source_key: bcb_sgs_api
+    source_code: "13522"
+    provider: Banco Central do Brasil
+    frequency: monthly
+    units: percent
+    release_metadata_behavior: observation date only
+    transformation_rules:
+      ingestion:
+        date_format: dd/MM/yyyy
+        value_field: valor
+        reference_month_end: true
+    display_metadata:
+      label: IPCA 12m
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_exchange_rate_median_2026
+    source_key: bcb_expectativas_odata
+    source_code: ExpectativasMercadoAnuais|Indicador=Câmbio|DataReferencia=2026|field=Mediana
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: BRL per USD
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: Câmbio
+          DataReferencia: "2026"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus BRL/USD median 2026
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_exchange_rate_median_2027
+    source_key: bcb_expectativas_odata
+    source_code: ExpectativasMercadoAnuais|Indicador=Câmbio|DataReferencia=2027|field=Mediana
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: BRL per USD
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: Câmbio
+          DataReferencia: "2027"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus BRL/USD median 2027
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_ipca_median_2026
+    source_key: bcb_expectativas_odata
+    source_code: ExpectativasMercadoAnuais|Indicador=IPCA|DataReferencia=2026|field=Mediana
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: percent
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: IPCA
+          DataReferencia: "2026"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus IPCA median 2026
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_ipca_median_2027
+    source_key: bcb_expectativas_odata
+    source_code: ExpectativasMercadoAnuais|Indicador=IPCA|DataReferencia=2027|field=Mediana
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: percent
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: IPCA
+          DataReferencia: "2027"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus IPCA median 2027
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_exchange_rate_median_2028
+    source_key: bcb_expectativas_odata
+    source_code: "ExpectativasMercadoAnuais|Indicador=C\u00E2mbio|DataReferencia=2028|field=Mediana"
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: BRL per USD
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: "C\u00E2mbio"
+          DataReferencia: "2028"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus BRL/USD median 2028
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_exchange_rate_median_2029
+    source_key: bcb_expectativas_odata
+    source_code: "ExpectativasMercadoAnuais|Indicador=C\u00E2mbio|DataReferencia=2029|field=Mediana"
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: BRL per USD
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: "C\u00E2mbio"
+          DataReferencia: "2029"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus BRL/USD median 2029
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_ipca_median_2028
+    source_key: bcb_expectativas_odata
+    source_code: ExpectativasMercadoAnuais|Indicador=IPCA|DataReferencia=2028|field=Mediana
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: percent
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: IPCA
+          DataReferencia: "2028"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus IPCA median 2028
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+  - series_key: focus_ipca_median_2029
+    source_key: bcb_expectativas_odata
+    source_code: ExpectativasMercadoAnuais|Indicador=IPCA|DataReferencia=2029|field=Mediana
+    provider: Banco Central do Brasil
+    frequency: daily
+    units: percent
+    release_metadata_behavior: survey date only
+    transformation_rules:
+      ingestion:
+        entity_set: ExpectativasMercadoAnuais
+        observation_date_field: Data
+        target_reference_field: DataReferencia
+        value_field: Mediana
+        filters:
+          Indicador: IPCA
+          DataReferencia: "2029"
+          baseCalculo: 0
+        reference_month_end: true
+    display_metadata:
+      label: Focus IPCA median 2029
+      audience: client-and-investment
+      client_default_scale: source-native
+      expose_native_for_audit: true
+    canonical_scale_policy:
+      raw: source-native
+      default_display: source-native
+      conversion_rule: not-applicable
+
+tactical_signal:
+  required_drivers:
+    - driver_key: reer_120_br
+      label: BRL REER broad
+      category: structural
+      series_key: reer_120_br
+      required_for_signal: true
+      notes: Canonical client default scale is 2020 average equals 100.
+    - driver_key: reer_51_br
+      label: BRL REER narrow
+      category: structural
+      series_key: reer_51_br
+      required_for_signal: true
+      notes: Canonical client default scale is 2020 average equals 100.
+    - driver_key: ptax_usd_brl_sell
+      label: PTAX USD/BRL sell
+      category: spot
+      series_key: ptax_usd_brl_sell
+      required_for_signal: true
+      notes: Latest spot and monthly close are both exposed in the tactical inputs snapshot.
+    - driver_key: sgs_selic_target_rate
+      label: Selic target rate
+      category: domestic-macro
+      series_key: sgs_selic_target_rate
+      required_for_signal: true
+    - driver_key: focus_exchange_rate_median_2026
+      label: Focus BRL/USD median 2026
+      category: expectations
+      series_key: focus_exchange_rate_median_2026
+      required_for_signal: true
+    - driver_key: focus_exchange_rate_median_2027
+      label: Focus BRL/USD median 2027
+      category: expectations
+      series_key: focus_exchange_rate_median_2027
+      required_for_signal: true
+    - driver_key: focus_exchange_rate_median_2028
+      label: Focus BRL/USD median 2028
+      category: expectations
+      series_key: focus_exchange_rate_median_2028
+      required_for_signal: true
+    - driver_key: focus_exchange_rate_median_2029
+      label: Focus BRL/USD median 2029
+      category: expectations
+      series_key: focus_exchange_rate_median_2029
+      required_for_signal: true
+    - driver_key: focus_ipca_median_2026
+      label: Focus IPCA median 2026
+      category: expectations
+      series_key: focus_ipca_median_2026
+      required_for_signal: true
+    - driver_key: focus_ipca_median_2027
+      label: Focus IPCA median 2027
+      category: expectations
+      series_key: focus_ipca_median_2027
+      required_for_signal: true
+    - driver_key: focus_ipca_median_2028
+      label: Focus IPCA median 2028
+      category: expectations
+      series_key: focus_ipca_median_2028
+      required_for_signal: true
+    - driver_key: focus_ipca_median_2029
+      label: Focus IPCA median 2029
+      category: expectations
+      series_key: focus_ipca_median_2029
+      required_for_signal: true
+    - driver_key: cds_brazil_5y
+      label: Brazil 5Y CDS
+      category: market
+      series_key: cds_brazil_5y
+      required_for_signal: true
+      missing_reason: approved-internal-file-not-ingested
+      source_type: approved internal
+      source_mode: approved_internal_file_drop
+      automation_mode: manual_batch
+      production_ingestion_approved: true
+      required_configuration: []
+      notes: Approved internal manual CSV file drop for Brazil 5Y CDS. Tactical coverage is complete only after the file is ingested into raw.observations.
+    - driver_key: broad_usd_index
+      label: Broad USD index
+      category: market
+      series_key: broad_usd_index
+      required_for_signal: true
+      notes: Official H.10 broad dollar index from the Federal Reserve Board daily indexes package.
+    - driver_key: commodity_terms_of_trade
+      label: Commodity or terms-of-trade driver
+      category: market
+      series_key: commodity_terms_of_trade
+      required_for_signal: true
+      notes: Official BCB IC-Br in US dollars from the SGS API.

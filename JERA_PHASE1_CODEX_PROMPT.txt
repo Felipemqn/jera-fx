@@ -1,0 +1,53 @@
+Use /plan first.
+
+Read the entire repository and AGENTS.md before doing anything else.
+Do not write implementation code in this first step.
+
+Goal:
+Transform this repository into a production-grade BRL/USD platform for JERA with:
+- Client Mode
+- Investment Mode
+- real market data
+- organized database
+- reproducible models
+- zero hardcoded market data in UI, scenarios, charts, or model logic
+
+Context:
+- There are prototype HTML files that represent desired product behavior only.
+- There is a local REER database that must be treated as seed data, not as a hardcoded app source.
+- There is a Python pipeline draft for data ingestion and modeling that should be audited and either reused or refactored.
+- The final system must support daily refresh jobs, backfills, feature engineering, explanatory regressions, tactical signals, structural REER bands, and a scenario lab.
+
+Constraints:
+- No hardcoded market values in frontend or backend logic.
+- Prefer official sources, especially Banco Central do Brasil for PTAX, SGS and Focus / Expectations.
+- Keep raw data, curated features, model artifacts and scenario runs separated.
+- Every model run must be versioned and reproducible.
+- The platform must be suitable both for direct client presentation and for internal investment work.
+
+Deliver only Phase 1 planning output:
+1. repository audit,
+2. proposed repo architecture,
+3. proposed dependency stack,
+4. proposed database schema,
+5. proposed API surface,
+6. proposed data connector plan,
+7. proposed model registry design,
+8. explicit list of all hardcoded values or hardcoded chart arrays you found,
+9. phased migration plan from the current prototypes,
+10. exact first implementation slice.
+
+Return in this exact structure:
+- Audit summary
+- Risks and technical debt
+- Proposed target architecture
+- Proposed database schema
+- Proposed data connectors
+- Proposed model system
+- Hardcoded items found
+- Migration phases
+- Phase 2 implementation slice
+- Files to create
+- Files to delete or archive
+
+Do not implement code yet.
