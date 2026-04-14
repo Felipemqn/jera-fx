@@ -355,6 +355,7 @@ class TacticalSignalMethodologyMetadata(BaseModel):
     inputs_snapshot_type: str
     freshness_snapshot_type: str
     score_published: bool
+    definition: dict | None = None
 
 
 class DriverAutomationMetadata(BaseModel):
@@ -371,6 +372,24 @@ class TacticalSignalLastUpdated(BaseModel):
     freshness_snapshot_created_at: datetime
 
 
+class DriverContribution(BaseModel):
+    driver_key: str
+    weight: float
+    z_score: float
+    weighted_contribution: float
+    inverted: bool
+    value: float
+    mean: float
+    std: float
+    history_points: int
+
+
+class ScoreCoverage(BaseModel):
+    available: list[str] = Field(default_factory=list)
+    insufficient: list[str] = Field(default_factory=list)
+    missing: list[str] = Field(default_factory=list)
+
+
 class TacticalSignalResponse(BaseModel):
     snapshot_type: str
     reference_month_end: date
@@ -380,6 +399,11 @@ class TacticalSignalResponse(BaseModel):
     signal_computable: bool
     source_coverage: DriverCoverage
     methodology: TacticalSignalMethodologyMetadata
+    score: float | None = None
+    regime: str | None = None
+    driver_contributions: list[DriverContribution] = Field(default_factory=list)
+    coverage: ScoreCoverage = Field(default_factory=ScoreCoverage)
+    degraded_reasons: list[str] = Field(default_factory=list)
     freshness_metadata: list[TacticalDriverFreshnessEntry]
     automation_modes: list[DriverAutomationMetadata]
     last_updated: TacticalSignalLastUpdated

@@ -201,8 +201,10 @@ def main() -> None:
             return
 
         if args.command == "build-tactical-signal":
-            payload = build_tactical_signal_snapshot(session)
+            payload = build_tactical_signal_snapshot(session, catalog)
             print(f"Built tactical signal snapshot for {payload['reference_month_end']} with status {payload['status']}")
+            if payload.get("score") is not None:
+                print(f"  score={payload['score']}  regime={payload['regime']}")
             return
 
         if args.command == "build-tactical-signal-readiness":

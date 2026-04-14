@@ -176,8 +176,8 @@ def test_manual_cds_ingest_and_signal_snapshot_are_idempotent(marts_ready_sessio
     build_tactical_signal_components_snapshot(marts_ready_session, catalog)
     build_tactical_signal_inputs_snapshot(marts_ready_session, catalog)
     build_tactical_signal_inputs_snapshot(marts_ready_session, catalog)
-    build_tactical_signal_snapshot(marts_ready_session)
-    build_tactical_signal_snapshot(marts_ready_session)
+    build_tactical_signal_snapshot(marts_ready_session, catalog)
+    build_tactical_signal_snapshot(marts_ready_session, catalog)
 
     cds_source_files = marts_ready_session.execute(
         select(func.count()).select_from(SourceFile).where(SourceFile.source_key == "approved_internal_cds_file_drop")

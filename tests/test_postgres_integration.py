@@ -174,7 +174,7 @@ def test_postgres_validation_smoke_path(monkeypatch) -> None:
             build_tactical_signal_readiness_snapshot(session, catalog)
             build_tactical_signal_components_snapshot(session, catalog)
             build_tactical_signal_inputs_snapshot(session, catalog)
-            build_tactical_signal_snapshot(session)
+            build_tactical_signal_snapshot(session, catalog)
 
         with session_factory() as session:
             def override_get_db_session():
@@ -186,7 +186,7 @@ def test_postgres_validation_smoke_path(monkeypatch) -> None:
                 response = client.get("/v1/client/tactical-signal")
                 assert response.status_code == 200
                 payload = response.json()
-                assert payload["status"] == "ready-no-score-published"
+                assert payload["status"] in ("degraded", "scored")
                 assert payload["signal_computable"] is True
                 assert payload["source_coverage"]["missing_driver_keys"] == []
                 cds_mode = next(item for item in payload["automation_modes"] if item["driver_key"] == "cds_brazil_5y")

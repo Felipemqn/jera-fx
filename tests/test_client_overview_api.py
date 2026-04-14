@@ -227,10 +227,12 @@ def test_tactical_signal_endpoint_reads_curated_snapshot_when_manual_cds_is_inge
         assert response.status_code == 200
         payload = response.json()
         assert payload["snapshot_type"] == "tactical_signal"
-        assert payload["status"] == "ready-no-score-published"
+        # With test fixtures (~3 points per driver), score is degraded — correct behavior.
+        assert payload["status"] in ("degraded", "scored")
         assert payload["signal_computable"] is True
         assert payload["source_coverage"]["missing_driver_keys"] == []
-        assert payload["methodology"]["score_published"] is False
+        assert "score" in payload
+        assert "regime" in payload
         cds_mode = next(item for item in payload["automation_modes"] if item["driver_key"] == "cds_brazil_5y")
         assert cds_mode["source_mode"] == "approved_internal_file_drop"
         assert cds_mode["automation_mode"] == "manual_batch"

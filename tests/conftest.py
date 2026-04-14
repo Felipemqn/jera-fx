@@ -345,5 +345,5 @@ def cds_ready_session(marts_ready_session: Session, catalog: SeriesCatalog, tmp_
     build_tactical_signal_readiness_snapshot(marts_ready_session, catalog)
     build_tactical_signal_components_snapshot(marts_ready_session, catalog)
     build_tactical_signal_inputs_snapshot(marts_ready_session, catalog)
-    build_tactical_signal_snapshot(marts_ready_session)
+    build_tactical_signal_snapshot(marts_ready_session, catalog)
     return marts_ready_session

@@ -561,28 +561,95 @@ def build_tactical_signal_inputs_snapshot(session: Session, catalog: SeriesCatal
     return payload
 
 
-def build_tactical_signal_snapshot(session: Session) -> dict[str, Any]:
-    from jera_fx_features.tactical_drivers import get_latest_tactical_driver_freshness_snapshot
+def _extract_driver_histories_and_latest(
+    history_snapshot: ClientSnapshot,
+    catalog: SeriesCatalog,
+) -> tuple[dict[str, list[float]], dict[str, float], list[float] | None, float | None]:
+    """Pull monthly-value arrays from the tactical driver history snapshot.
+
+    Returns
+    -------
+    driver_histories
+        ``{driver_key: [values ascending]}`` for individual drivers.
+    driver_latest
+        ``{driver_key: latest_value}`` for individual drivers.
+    focus_exchange_values
+        Aggregated Focus FX history (average across all horizon medians per month).
+    focus_exchange_latest
+        Latest aggregated Focus FX value.
+    """
+    drivers = history_snapshot.payload_json.get("drivers", [])
+    driver_histories: dict[str, list[float]] = {}
+    driver_latest: dict[str, float] = {}
+
+    focus_histories: list[list[float]] = []
+
+    for driver in drivers:
+        if driver.get("status") == "missing" or not driver.get("points"):
+            continue
+        dk = driver["driver_key"]
+        values = [p["value"] for p in driver["points"] if p.get("value") is not None]
+        if not values:
+            continue
+
+        # Focus series are aggregated into a single factor.
+        if dk.startswith("focus_exchange_rate_median_"):
+            focus_histories.append(values)
+            continue
+        # Skip spot — reference only, not scored.
+        if dk in ("ptax_usd_brl_sell", "ptax_usd_brl_buy"):
+            continue
+        # Skip IPCA expectations — informational, not in v1 score.
+        if dk.startswith("focus_ipca_median_"):
+            continue
+
+        driver_histories[dk] = values
+        driver_latest[dk] = values[-1]
+
+    # Aggregate Focus FX: average across all horizons per time step.
+    focus_exchange_values: list[float] | None = None
+    focus_exchange_latest: float | None = None
+    if focus_histories:
+        min_len = min(len(h) for h in focus_histories)
+        if min_len > 0:
+            focus_exchange_values = []
+            for i in range(min_len):
+                avg = sum(h[i] for h in focus_histories if i < len(h)) / len(
+                    [h for h in focus_histories if i < len(h)]
+                )
+                focus_exchange_values.append(avg)
+            focus_exchange_latest = focus_exchange_values[-1]
+
+    return driver_histories, driver_latest, focus_exchange_values, focus_exchange_latest
+
+
+def build_tactical_signal_snapshot(session: Session, catalog: SeriesCatalog | None = None) -> dict[str, Any]:
+    from jera_fx_features.tactical_drivers import (
+        get_latest_tactical_driver_freshness_snapshot,
+        get_latest_tactical_driver_history_snapshot,
+    )
+    from jera_fx_features.tactical_score import (
+        compute_tactical_score,
+        score_result_to_dict,
+    )
 
     feature_set = upsert_feature_set(
         session,
         feature_set_key=TACTICAL_SIGNAL_FEATURE_SET_KEY,
         name="Tactical signal snapshot",
-        version="v1",
-        description="Read-only tactical signal status snapshot backed entirely by curated inputs and freshness metadata.",
-        scale_policy="status-only",
-        definition_hash=stable_hash({"feature_set_key": TACTICAL_SIGNAL_FEATURE_SET_KEY}),
+        version="v2",
+        description="Governed tactical signal with score, regime, and driver contributions backed by curated inputs.",
+        scale_policy="scored",
+        definition_hash=stable_hash({"feature_set_key": TACTICAL_SIGNAL_FEATURE_SET_KEY, "version": "v2"}),
     )
     readiness_snapshot = get_latest_tactical_signal_readiness_snapshot(session)
     inputs_snapshot = get_latest_tactical_signal_inputs_snapshot(session)
     freshness_snapshot = get_latest_tactical_driver_freshness_snapshot(session)
+    history_snapshot = get_latest_tactical_driver_history_snapshot(session)
     if readiness_snapshot is None or inputs_snapshot is None or freshness_snapshot is None:
         raise ValueError("Tactical signal snapshot requires readiness, inputs, and freshness snapshots")
 
     readiness_payload = readiness_snapshot.payload_json
-    if not readiness_payload["signal_computable"] or readiness_payload["missing_driver_keys"]:
-        raise ValueError("Tactical signal snapshot cannot be built until all required drivers are available")
-
     freshness_payload = freshness_snapshot.payload_json
     automation_modes = [
         {
@@ -595,22 +662,63 @@ def build_tactical_signal_snapshot(session: Session) -> dict[str, Any]:
         for driver in freshness_payload["drivers"]
     ]
     reference_month_end = pd.to_datetime(readiness_payload["reference_month_end"]).date()
-    payload = {
+
+    # --- Compute score (or degrade gracefully) ---
+    score_result_dict: dict[str, Any] | None = None
+    if (
+        readiness_payload["signal_computable"]
+        and not readiness_payload["missing_driver_keys"]
+        and history_snapshot is not None
+        and catalog is not None
+    ):
+        histories, latest, focus_vals, focus_latest = _extract_driver_histories_and_latest(
+            history_snapshot, catalog
+        )
+        score_result = compute_tactical_score(
+            histories,
+            latest,
+            focus_exchange_values=focus_vals,
+            focus_exchange_latest=focus_latest,
+        )
+        score_result_dict = score_result_to_dict(score_result)
+
+    # Determine top-level status.
+    if score_result_dict is not None and score_result_dict["status"] == "scored":
+        top_status = "scored"
+        score_published = True
+    elif score_result_dict is not None and score_result_dict["status"] == "degraded":
+        top_status = "degraded"
+        score_published = False
+    elif not readiness_payload["signal_computable"] or readiness_payload["missing_driver_keys"]:
+        top_status = "missing-drivers"
+        score_published = False
+    else:
+        top_status = "ready-no-score-published"
+        score_published = False
+
+    methodology_block: dict[str, Any] = {
+        "readiness_snapshot_type": "tactical_signal_readiness",
+        "inputs_snapshot_type": "tactical_signal_inputs",
+        "freshness_snapshot_type": "tactical_driver_freshness",
+        "score_published": score_published,
+    }
+    if score_result_dict is not None:
+        methodology_block["version"] = score_result_dict["methodology_version"]
+        methodology_block["status"] = score_result_dict["status"]
+        methodology_block["definition"] = score_result_dict["methodology"]
+    else:
+        methodology_block["version"] = "tactical-signal-foundation-v1"
+        methodology_block["status"] = top_status
+
+    payload: dict[str, Any] = {
         "snapshot_type": "tactical_signal",
         "reference_month_end": reference_month_end.isoformat(),
         "snapshot_created_at": utcnow().isoformat(),
-        "status": "ready-no-score-published",
+        "status": top_status,
         "client_default_reer_scale_policy": inputs_snapshot.payload_json["client_default_reer_scale_policy"],
         "signal_computable": readiness_payload["signal_computable"],
         "source_coverage": inputs_snapshot.payload_json["driver_coverage"],
-        "methodology": {
-            "version": "tactical-signal-foundation-v1",
-            "status": "full-driver-coverage-no-score-published",
-            "readiness_snapshot_type": "tactical_signal_readiness",
-            "inputs_snapshot_type": "tactical_signal_inputs",
-            "freshness_snapshot_type": "tactical_driver_freshness",
-            "score_published": False,
-        },
+        "methodology": methodology_block,
         "freshness_metadata": freshness_payload["drivers"],
         "automation_modes": automation_modes,
         "last_updated": {
@@ -619,6 +727,20 @@ def build_tactical_signal_snapshot(session: Session) -> dict[str, Any]:
             "freshness_snapshot_created_at": freshness_payload["snapshot_created_at"],
         },
     }
+
+    if score_result_dict is not None:
+        payload["score"] = score_result_dict["score"]
+        payload["regime"] = score_result_dict["regime"]
+        payload["driver_contributions"] = score_result_dict["driver_contributions"]
+        payload["coverage"] = score_result_dict["coverage"]
+        payload["degraded_reasons"] = score_result_dict["degraded_reasons"]
+    else:
+        payload["score"] = None
+        payload["regime"] = None
+        payload["driver_contributions"] = []
+        payload["coverage"] = {"available": [], "insufficient": [], "missing": []}
+        payload["degraded_reasons"] = ["score computation not attempted — missing prerequisites"]
+
     upsert_client_snapshot(
         session,
         snapshot_type="tactical_signal",

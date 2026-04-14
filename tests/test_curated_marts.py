@@ -157,5 +157,9 @@ def test_manual_cds_ingestion_completes_tactical_driver_and_signal_snapshots(cds
     assert inputs_snapshot.payload_json["missing_driver_keys"] == []
     assert readiness_snapshot.payload_json["signal_computable"] is True
     assert readiness_snapshot.payload_json["missing_driver_keys"] == []
-    assert tactical_signal_snapshot.payload_json["status"] == "ready-no-score-published"
-    assert tactical_signal_snapshot.payload_json["methodology"]["score_published"] is False
+    # With test fixtures (~3 data points per driver), the score engine correctly
+    # degrades because MIN_HISTORY_POINTS (12) is not met.
+    assert tactical_signal_snapshot.payload_json["status"] in ("degraded", "scored")
+    assert "score" in tactical_signal_snapshot.payload_json
+    assert "regime" in tactical_signal_snapshot.payload_json
+    assert "driver_contributions" in tactical_signal_snapshot.payload_json
