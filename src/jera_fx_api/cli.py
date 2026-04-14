@@ -10,7 +10,7 @@ from jera_fx_connectors.bcb_focus import backfill_focus
 from jera_fx_connectors.bcb_ptax import backfill_ptax
 from jera_fx_connectors.bcb_sgs import backfill_sgs
 from jera_fx_connectors.fed_h10 import backfill_fed_h10
-from jera_fx_connectors.manual_cds_file import ingest_manual_cds_file
+from jera_fx_connectors.manual_cds_file import ingest_manual_cds_file, validate_manual_cds_file
 from jera_fx_connectors.reer_workbook import ingest_reer_workbook
 from jera_fx_features.client_overview import build_client_overview_snapshot
 from jera_fx_features.reer_bands import build_reer_bands_snapshot
@@ -41,6 +41,16 @@ def _build_parser() -> argparse.ArgumentParser:
     cds_parser = subparsers.add_parser("ingest-cds-file", help="Ingest the approved internal manual CDS file drop")
     cds_parser.add_argument("--path", default=None, help="Path to the manual CDS CSV file")
     cds_parser.add_argument("--series-key", default="cds_brazil_5y", help="Series key to ingest from the manual CDS file")
+    cds_parser.add_argument("--operator", required=True, help="Operator identifier (email or username) responsible for this ingestion")
+    cds_parser.add_argument("--source-note", default=None, help="Optional free-text note describing the source/export (e.g. 'Reuters Eikon manual export 2026-04-07')")
+
+    cds_validate = subparsers.add_parser(
+        "validate-cds-file",
+        help="Validate a manual CDS file without persisting data (dry-run)",
+    )
+    cds_validate.add_argument("--path", default=None, help="Path to the manual CDS CSV file")
+    cds_validate.add_argument("--series-key", default="cds_brazil_5y", help="Series key to validate against the catalog")
+    cds_validate.add_argument("--check-db", action="store_true", help="Also check whether this file checksum was already ingested")
 
     backfill_parser = subparsers.add_parser("backfill", help="Backfill a supported source")
     backfill_parser.add_argument("--source", choices=["ptax", "sgs", "focus", "h10"], required=True)
@@ -89,12 +99,29 @@ def main() -> None:
                 catalog,
                 file_path=file_path,
                 series_key=args.series_key,
+                operator=args.operator,
+                source_note=args.source_note,
             )
             print(
                 "Ingested manual CDS file "
                 f"{payload['file_path']} for {payload['series_key']} "
-                f"({payload['row_count']} rows, checksum {payload['checksum_sha256']})"
+                f"({payload['row_count']} rows, checksum {payload['checksum_sha256']}, "
+                f"operator={args.operator})"
             )
+            return
+
+        if args.command == "validate-cds-file":
+            file_path = args.path or settings.cds_brazil_5y_file_path
+            report = validate_manual_cds_file(
+                catalog,
+                file_path=file_path,
+                series_key=args.series_key,
+                session=session if args.check_db else None,
+            )
+            import json as _json
+            print(_json.dumps(report, indent=2, sort_keys=True, default=str))
+            if report["errors"]:
+                raise SystemExit(1)
             return
 
         if args.command == "backfill":

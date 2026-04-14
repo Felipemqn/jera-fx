@@ -23,3 +23,6 @@ Thumbs.db
 *.sqlite
 *.db
 coverage/
+
+# Manual CDS file archive (operational storage, not version-controlled)
+data/raw/cds/archive/
