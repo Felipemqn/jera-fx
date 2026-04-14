@@ -13,6 +13,7 @@ from jera_fx_connectors.fed_h10 import backfill_fed_h10
 from jera_fx_connectors.manual_cds_file import ingest_manual_cds_file, validate_manual_cds_file
 from jera_fx_connectors.reer_workbook import ingest_reer_workbook
 from jera_fx_features.client_overview import build_client_overview_snapshot
+from jera_fx_features.scenario_builder import build_scenario_set_snapshot
 from jera_fx_features.reer_bands import build_reer_bands_snapshot
 from jera_fx_features.reer_canonical import build_reer_canonical_features
 from jera_fx_features.source_freshness import build_ptax_monthly_history_snapshot, build_source_freshness_snapshot
@@ -57,6 +58,9 @@ def _build_parser() -> argparse.ArgumentParser:
     backfill_parser.add_argument("--start", required=True)
     backfill_parser.add_argument("--end", required=True)
     backfill_parser.add_argument("--series-key", action="append", default=[], help="Series key for SGS or Focus backfills; can be repeated")
+
+    scenario_parser = subparsers.add_parser("build-scenario-set", help="Build the scenario set snapshot with fan chart and paths")
+    scenario_parser.add_argument("--anchor", type=float, default=None, help="Override the auto-resolved REER anchor (BRL/USD)")
 
     subparsers.add_parser("build-client-overview", help="Build the curated client overview snapshot")
     subparsers.add_parser("build-reer-bands", help="Build the curated REER bands snapshot")
@@ -122,6 +126,25 @@ def main() -> None:
             print(_json.dumps(report, indent=2, sort_keys=True, default=str))
             if report["errors"]:
                 raise SystemExit(1)
+            return
+
+        if args.command == "build-scenario-set":
+            payload = build_scenario_set_snapshot(
+                session,
+                anchor_override=args.anchor,
+            )
+            expected_1y = next(
+                (p["expected_fair_value"] for p in payload["expected_path"] if p["horizon_years"] == 1), None
+            )
+            expected_10y = next(
+                (p["expected_fair_value"] for p in payload["expected_path"] if p["horizon_years"] == 10), None
+            )
+            print(
+                f"Built scenario set snapshot for {payload['reference_date']} "
+                f"(anchor={payload['anchor_value']:.2f}, "
+                f"expected 1Y={expected_1y}, 10Y={expected_10y}, "
+                f"{payload['scenario_count']} scenarios)"
+            )
             return
 
         if args.command == "backfill":

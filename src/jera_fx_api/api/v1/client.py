@@ -8,6 +8,7 @@ from jera_fx_api.schemas.client_overview import (
     ClientOverviewResponse,
     PtaxHistoryResponse,
     ReerBandsResponse,
+    ScenarioSetResponse,
     SourceFreshnessResponse,
     TacticalDriverFreshnessResponse,
     TacticalDriversResponse,
@@ -26,6 +27,7 @@ from jera_fx_features.tactical_drivers import (
     get_latest_tactical_driver_history_snapshot,
     get_latest_tactical_driver_latest_snapshot,
 )
+from jera_fx_features.scenario_builder import get_latest_scenario_set_snapshot
 from jera_fx_features.tactical_signal import (
     get_latest_tactical_signal_snapshot,
     get_latest_tactical_signal_inputs_snapshot,
@@ -132,3 +134,11 @@ def get_client_tactical_signal(session: Session = Depends(get_db_session)) -> Ta
     if snapshot is None:
         raise HTTPException(status_code=404, detail="Tactical signal snapshot not found")
     return TacticalSignalResponse.model_validate(snapshot.payload_json)
+
+
+@router.get("/scenarios", response_model=ScenarioSetResponse)
+def get_client_scenarios(session: Session = Depends(get_db_session)) -> ScenarioSetResponse:
+    snapshot = get_latest_scenario_set_snapshot(session)
+    if snapshot is None:
+        raise HTTPException(status_code=404, detail="Scenario set snapshot not found")
+    return ScenarioSetResponse.model_validate(snapshot.payload_json)

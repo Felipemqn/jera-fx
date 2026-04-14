@@ -348,6 +348,80 @@ class TacticalDriverFreshnessResponse(BaseModel):
     drivers: list[TacticalDriverFreshnessEntry]
 
 
+class ScenarioHorizonBetas(BaseModel):
+    beta_dxy: float
+    beta_cds: float
+    beta_carry: float
+    beta_comm: float
+    beta_prod: float
+
+
+class ScenarioDriverContributions(BaseModel):
+    anchor: float
+    dxy_factor: float
+    cds_factor: float
+    carry_factor: float
+    commodity_factor: float
+    productivity_factor: float
+
+
+class ScenarioHorizonPoint(BaseModel):
+    horizon_years: int
+    fair_value: float
+    betas_used: ScenarioHorizonBetas
+    driver_contributions: ScenarioDriverContributions
+
+
+class ScenarioAssumptions(BaseModel):
+    dxy: float
+    cds_shock_bps: float
+    carry_pct: float
+    commodity_shock_pct: float
+    productivity_gap_pct: float
+
+
+class ScenarioEntry(BaseModel):
+    scenario_key: str
+    label: str
+    narrative: str
+    probability: float
+    color: str
+    assumptions: ScenarioAssumptions
+    horizons: list[ScenarioHorizonPoint]
+
+
+class ExpectedPathPoint(BaseModel):
+    horizon_years: int
+    expected_fair_value: float
+
+
+class FanChartPoint(BaseModel):
+    horizon_years: int
+    min: float
+    max: float
+    expected: float
+    p25: float
+    p75: float
+    scenarios: dict[str, float]
+
+
+class ScenarioSetResponse(BaseModel):
+    snapshot_type: str
+    reference_month_end: date
+    snapshot_created_at: datetime
+    methodology_version: str
+    anchor_value: float
+    anchor_source: str
+    reference_date: str
+    spot_value: float
+    scenario_count: int
+    horizons: list[int]
+    horizon_betas: dict[str, ScenarioHorizonBetas]
+    scenarios: list[ScenarioEntry]
+    expected_path: list[ExpectedPathPoint]
+    fan_chart: list[FanChartPoint]
+
+
 class TacticalSignalMethodologyMetadata(BaseModel):
     version: str
     status: str
