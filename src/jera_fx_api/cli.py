@@ -14,6 +14,7 @@ from jera_fx_connectors.manual_cds_file import ingest_manual_cds_file, validate_
 from jera_fx_connectors.reer_workbook import ingest_reer_workbook
 from jera_fx_features.client_overview import build_client_overview_snapshot
 from jera_fx_features.investment_builder import build_driver_variations_snapshot, build_rolling_regression_snapshot
+from jera_fx_features.ml_builder import build_ml_registry_snapshot
 from jera_fx_features.scenario_builder import build_scenario_set_snapshot
 from jera_fx_features.reer_bands import build_reer_bands_snapshot
 from jera_fx_features.reer_canonical import build_reer_canonical_features
@@ -65,6 +66,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("build-rolling-regression", help="Build the rolling regression snapshot for investment mode")
     subparsers.add_parser("build-driver-variations", help="Build the 1Y driver variations dashboard snapshot")
+    subparsers.add_parser("build-ml-registry", help="Train ML models (ridge + GBM), run backtests, persist registry")
 
     subparsers.add_parser("build-client-overview", help="Build the curated client overview snapshot")
     subparsers.add_parser("build-reer-bands", help="Build the curated REER bands snapshot")
@@ -163,6 +165,14 @@ def main() -> None:
             payload = build_driver_variations_snapshot(session)
             n = len(payload.get("variations", []))
             print(f"Built driver variations snapshot with {n} drivers")
+            return
+
+        if args.command == "build-ml-registry":
+            payload = build_ml_registry_snapshot(session)
+            for m in payload.get("models", []):
+                bt = m.get("backtest", {})
+                print(f"  {m['model_name']}: RMSE={bt.get('rmse')}, R2_oos={bt.get('r_squared_oos')}, status={m['status']}")
+            print(f"ML registry built with {len(payload.get('models', []))} models ({payload['n_observations']} obs)")
             return
 
         if args.command == "backfill":
