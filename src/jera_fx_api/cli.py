@@ -13,6 +13,7 @@ from jera_fx_connectors.fed_h10 import backfill_fed_h10
 from jera_fx_connectors.manual_cds_file import ingest_manual_cds_file, validate_manual_cds_file
 from jera_fx_connectors.reer_workbook import ingest_reer_workbook
 from jera_fx_features.client_overview import build_client_overview_snapshot
+from jera_fx_features.investment_builder import build_driver_variations_snapshot, build_rolling_regression_snapshot
 from jera_fx_features.scenario_builder import build_scenario_set_snapshot
 from jera_fx_features.reer_bands import build_reer_bands_snapshot
 from jera_fx_features.reer_canonical import build_reer_canonical_features
@@ -61,6 +62,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
     scenario_parser = subparsers.add_parser("build-scenario-set", help="Build the scenario set snapshot with fan chart and paths")
     scenario_parser.add_argument("--anchor", type=float, default=None, help="Override the auto-resolved REER anchor (BRL/USD)")
+
+    subparsers.add_parser("build-rolling-regression", help="Build the rolling regression snapshot for investment mode")
+    subparsers.add_parser("build-driver-variations", help="Build the 1Y driver variations dashboard snapshot")
 
     subparsers.add_parser("build-client-overview", help="Build the curated client overview snapshot")
     subparsers.add_parser("build-reer-bands", help="Build the curated REER bands snapshot")
@@ -145,6 +149,20 @@ def main() -> None:
                 f"expected 1Y={expected_1y}, 10Y={expected_10y}, "
                 f"{payload['scenario_count']} scenarios)"
             )
+            return
+
+        if args.command == "build-rolling-regression":
+            payload = build_rolling_regression_snapshot(session)
+            windows_summary = ", ".join(
+                f"{w['window_label']}(R2={w['r_squared']})" for w in payload.get("windows", [])
+            )
+            print(f"Built rolling regression snapshot: {windows_summary}")
+            return
+
+        if args.command == "build-driver-variations":
+            payload = build_driver_variations_snapshot(session)
+            n = len(payload.get("variations", []))
+            print(f"Built driver variations snapshot with {n} drivers")
             return
 
         if args.command == "backfill":

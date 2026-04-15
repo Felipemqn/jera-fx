@@ -12,6 +12,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "3000", "--directory", "apps/client-web"],
       "port": 3000
+    },
+    {
+      "name": "investment-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3001", "--directory", "apps/investment-web"],
+      "port": 3001
     }
   ]
 }

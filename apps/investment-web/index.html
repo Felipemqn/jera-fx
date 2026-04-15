@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JERA — Investment Mode</title>
+  <meta name="description" content="JERA Capital BRL/USD Investment Workspace. Regressoes, atribuicao de fatores, cenarios e diagnosticos.">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── Sidebar ──────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>JERA Capital</h1>
+      <div class="mode-badge">Investment Mode</div>
+    </div>
+
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-label">Analise</div>
+        <a class="nav-item active" data-section="dashboard">
+          <span class="icon">&#9673;</span> Dashboard
+        </a>
+        <a class="nav-item" data-section="variations">
+          <span class="icon">&#8710;</span> Variacoes 1A
+        </a>
+        <a class="nav-item" data-section="regressions">
+          <span class="icon">&#120024;</span> Regressoes
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Cenarios</div>
+        <a class="nav-item" data-section="scenarios">
+          <span class="icon">&#9881;</span> Scenario Lab
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Governanca</div>
+        <a class="nav-item" data-section="freshness">
+          <span class="icon">&#8987;</span> Fontes & Freshness
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="version">jera-fx v0.2.0</div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────── -->
+  <div class="main-content">
+
+    <!-- Dashboard -->
+    <div id="panel-dashboard" class="section-panel active">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <div class="subtitle">Visao consolidada — spot, sinal tatico, cenarios e drivers</div>
+      </div>
+      <div id="dashboard-content"><div class="status-msg loading">Carregando dados...</div></div>
+    </div>
+
+    <!-- Variations -->
+    <div id="panel-variations" class="section-panel">
+      <div class="page-header">
+        <h2>Variacoes 12 Meses</h2>
+        <div class="subtitle">Delta de todos os drivers taticos no ultimo ano</div>
+      </div>
+      <div id="variations-content"><div class="status-msg loading">Carregando dados...</div></div>
+    </div>
+
+    <!-- Regressions -->
+    <div id="panel-regressions" class="section-panel">
+      <div class="page-header">
+        <h2>Regressoes Rolantes</h2>
+        <div class="subtitle">OLS multi-janela: 3A / 2A / 1A / trimestre — betas, R² e atribuicao</div>
+      </div>
+      <div id="regressions-content"><div class="status-msg loading">Carregando dados...</div></div>
+    </div>
+
+    <!-- Scenarios -->
+    <div id="panel-scenarios" class="section-panel">
+      <div class="page-header">
+        <h2>Scenario Lab</h2>
+        <div class="subtitle">Cenarios canonicos com premissas explicitas e fan chart</div>
+      </div>
+      <div id="scenarios-content"><div class="status-msg loading">Carregando dados...</div></div>
+    </div>
+
+    <!-- Freshness -->
+    <div id="panel-freshness" class="section-panel">
+      <div class="page-header">
+        <h2>Fontes &amp; Freshness</h2>
+        <div class="subtitle">Status de ingestao, cobertura e ultima atualizacao</div>
+      </div>
+      <div id="freshness-content"><div class="status-msg loading">Carregando dados...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
