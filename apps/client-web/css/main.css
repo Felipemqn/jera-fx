@@ -1,0 +1,342 @@
+/* ── JERA FX Client Mode — Institutional Theme ─────────── */
+
+:root {
+  --bg:       #0E1117;
+  --surface:  #161B26;
+  --card:     #1C2333;
+  --border:   #2A3040;
+  --text:     #E0E8F0;
+  --muted:    #8899AA;
+  --blue:     #5B9BD5;
+  --gold:     #E6A817;
+  --green:    #4CAF50;
+  --red:      #E53935;
+  --orange:   #FF9800;
+  --radius:   8px;
+  --font:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ────────────────────────────────────────────── */
+
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.app-header .subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 12px;
+}
+
+.nav-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav-chip {
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+.nav-chip:hover {
+  color: var(--text);
+  border-color: var(--blue);
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+/* ── Cards & KPIs ──────────────────────────────────────── */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.kpi-grid.compact-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.kpi-card.compact { padding: 12px; }
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.kpi-card.compact .kpi-value { font-size: 18px; }
+
+.kpi-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Scenarios ─────────────────────────────────────────── */
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.scenario-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.scenario-card h4 {
+  font-size: 15px;
+  margin: 8px 0 4px;
+  color: var(--text);
+}
+
+.scenario-card p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.scenario-prob {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.scenario-path {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 8px;
+  letter-spacing: -0.02em;
+}
+
+/* ── Signal ────────────────────────────────────────────── */
+
+.signal-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.signal-gauge { text-align: center; }
+
+.signal-status { margin-top: 8px; }
+
+.degraded-reasons {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+
+.degraded-reasons .reason {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Bands ─────────────────────────────────────────────── */
+
+.band-section {
+  margin-bottom: 20px;
+}
+
+.band-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Charts ────────────────────────────────────────────── */
+
+.chart-container {
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.chart-svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Tables ────────────────────────────────────────────── */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Badges ────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-scored     { background: rgba(76,175,80,0.15); color: var(--green); }
+.badge-degraded   { background: rgba(255,152,0,0.15); color: var(--orange); }
+.badge-missing    { background: rgba(229,57,53,0.15); color: var(--red); }
+.badge-available  { background: rgba(91,155,213,0.15); color: var(--blue); }
+.badge-unknown    { background: rgba(136,153,170,0.15); color: var(--muted); }
+
+/* ── Status Messages ───────────────────────────────────── */
+
+.status-msg {
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  text-align: center;
+}
+
+.status-msg.loading { background: var(--surface); color: var(--muted); }
+.status-msg.error   { background: rgba(229,57,53,0.08); color: var(--red); }
+
+.no-data { color: var(--muted); font-size: 13px; font-style: italic; }
+
+/* ── Updated ───────────────────────────────────────────── */
+
+.updated {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Methodology ───────────────────────────────────────── */
+
+.methodology-content {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.methodology-content h4 { color: var(--text); margin-top: 16px; }
+
+.methodology-content ul {
+  margin: 8px 0 8px 20px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .app-header { flex-direction: column; gap: 8px; padding: 12px 16px; }
+  main { padding: 16px; }
+  .signal-layout { grid-template-columns: 1fr; }
+  .scenario-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .scenario-grid { grid-template-columns: 1fr; }
+  .nav-chips { display: none; }
+}

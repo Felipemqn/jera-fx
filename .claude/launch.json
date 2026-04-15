@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "uvicorn", "jera_fx_api.main:app", "--host", "127.0.0.1", "--port", "8000", "--reload"],
       "port": 8000
+    },
+    {
+      "name": "client-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3000", "--directory", "apps/client-web"],
+      "port": 3000
     }
   ]
 }

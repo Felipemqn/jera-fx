@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JERA — BRL/USD Client Mode</title>
+  <meta name="description" content="Plataforma institucional BRL/USD da JERA Capital. Dados em tempo real, bandas REER, sinal tatico e cenarios.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div>
+      <h1>JERA Capital <span class="subtitle">BRL/USD — Client Mode</span></h1>
+    </div>
+    <nav class="nav-chips">
+      <a class="nav-chip" href="#overview">Overview</a>
+      <a class="nav-chip" href="#reer-bands">REER Bands</a>
+      <a class="nav-chip" href="#ptax-history">PTAX</a>
+      <a class="nav-chip" href="#tactical-signal">Sinal Tatico</a>
+      <a class="nav-chip" href="#scenarios">Cenarios</a>
+      <a class="nav-chip" href="#freshness">Fontes</a>
+      <a class="nav-chip" href="#methodology">Metodologia</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <div id="overview-content"><div class="status-msg loading">Carregando...</div></div>
+    </section>
+
+    <section id="reer-bands">
+      <h2>Bandas REER</h2>
+      <div id="reer-bands-content"><div class="status-msg loading">Carregando...</div></div>
+    </section>
+
+    <section id="ptax-history">
+      <h2>Historico PTAX</h2>
+      <div id="ptax-history-content"><div class="status-msg loading">Carregando...</div></div>
+    </section>
+
+    <section id="tactical-signal">
+      <h2>Sinal Tatico</h2>
+      <div id="tactical-signal-content"><div class="status-msg loading">Carregando...</div></div>
+    </section>
+
+    <section id="scenarios">
+      <h2>Cenarios</h2>
+      <div id="scenarios-content"><div class="status-msg loading">Carregando...</div></div>
+    </section>
+
+    <section id="freshness">
+      <h2>Fontes e Atualizacao</h2>
+      <div id="freshness-content"><div class="status-msg loading">Carregando...</div></div>
+    </section>
+
+    <section id="methodology">
+      <h2>Metodologia</h2>
+      <div class="methodology-content">
+        <h4>Estrutura da plataforma</h4>
+        <p>Todos os dados exibidos nesta pagina sao produzidos pela API da JERA FX Platform.
+           Nenhum valor esta embutido na interface. Cada secao consome um endpoint dedicado
+           e mostra a data de atualizacao correspondente.</p>
+
+        <h4>Bandas REER</h4>
+        <p>O Real Effective Exchange Rate (REER) broad (120 paises) e narrow (51 paises)
+           serve como ancora estrutural. As bandas mostram os percentis historicos (p10 a p90)
+           da serie canonizada com base 2020 = 100.</p>
+
+        <h4>Sinal Tatico v1</h4>
+        <p>Score composto de -100 a +100 baseado em z-scores dos drivers principais:
+           REER broad/narrow, DXY, CDS Brasil 5Y, commodities, Selic e Focus cambio.
+           Os pesos sao fixos, transparentes e documentados. Quando algum driver nao tem
+           historico suficiente (minimo 12 meses), o score e degradado automaticamente.</p>
+
+        <h4>Cenarios</h4>
+        <p>Quatro cenarios canonicos (benigno, base, fiscal, super-dolar) com premissas
+           explicitas por driver. O fair value em cada horizonte (1A, 3A, 5A, 10A) e calculado
+           a partir da formula de fatores com betas dependentes do horizonte. O fan chart
+           mostra a trajetoria ponderada por probabilidade.</p>
+
+        <h4>Governanca</h4>
+        <ul>
+          <li>Nenhum valor de mercado esta hardcoded na interface</li>
+          <li>Cada secao mostra a data de ultima atualizacao</li>
+          <li>A versao da metodologia e exibida junto ao score tatico</li>
+          <li>Cenarios sao reproduziveis a partir das premissas armazenadas</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
