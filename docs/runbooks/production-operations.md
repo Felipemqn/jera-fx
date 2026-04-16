@@ -21,21 +21,58 @@
      └──────────────────────────────────────────────────┘
 ```
 
-## 2. Quick Start
+## 2. Production Deploy — On-Prem Docker
+
+### 2.1 Pre-deploy checklist
+
+- [ ] Servidor Linux com Docker 24+ e Docker Compose v2
+- [ ] Firewall permitindo 8000 (API), 3000/3001 (UIs) **apenas** da rede interna / VPN
+- [ ] Reverse proxy (nginx/Traefik) terminando TLS na frente — o compose nao expoe HTTPS
+- [ ] `.env` copiado de `.env.example` com valores reais:
+  - `POSTGRES_PASSWORD` gerado via `openssl rand -base64 32`
+  - `DATABASE_URL` coerente com o password acima
+  - `CORS_ALLOWED_ORIGINS` apontando para os hostnames reais (https://...)
+- [ ] Volume persistente `pgdata` em storage backed-up
+- [ ] DNS interno resolvendo os hostnames para o servidor
+
+### 2.2 First-time deploy
 
 ```bash
-# Docker (recommended for production)
+# 1. Clone
+git clone https://github.com/Felipemqn/jera-fx.git
+cd jera-fx
+git checkout v1.0.1-prod-ready   # ou a tag mais recente
+
+# 2. Configure environment
+cp .env.example .env
+nano .env   # preencha POSTGRES_PASSWORD, DATABASE_URL, CORS_ALLOWED_ORIGINS
+
+# 3. Build + start
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+# 4. Verify health (wait ~20s)
+curl http://localhost:8000/v1/meta/health
+# Expected: {"status":"ok","version":"1.0.1","db":"ok",...}
+
+# 5. Seed initial data
+docker compose exec api python -m jera_fx_api.cli seed
+
+# 6. First data backfill + snapshot build
+docker compose exec api python -m jera_fx_api.scheduler
+```
+
+After this, the `scheduler` service will automatically re-run the
+pipeline every 24h (controlled by `SCHEDULER_INTERVAL_SECONDS`).
+The `backup` service will dump Postgres every 24h into the `pgbackups`
+volume and rotate anything older than `BACKUP_RETENTION_DAYS` (default 14).
+
+### 2.3 Local dev (no prod override)
+
+```bash
+# Uses dev defaults (weak password, Postgres port exposed)
 docker compose up -d
-
-# Then seed + build initial snapshots:
-docker compose run --rm api python -m jera_fx_api.cli seed
-docker compose run --rm --profile refresh scheduler
-
-# Or locally:
-pip install -e .
-python -m jera_fx_api.cli seed
-python -m jera_fx_api.scheduler
-uvicorn jera_fx_api.main:app --host 0.0.0.0 --port 8000
+docker compose exec api python -m jera_fx_api.cli seed
+docker compose run --rm scheduler   # one-shot refresh
 ```
 
 ## 3. Daily Refresh
@@ -99,7 +136,13 @@ alembic current
 ### Health check
 ```bash
 curl http://localhost:8000/v1/meta/health
+# {"status":"ok","version":"1.0.1","db":"ok","timestamp":"..."}
 ```
+
+Use this endpoint for:
+- Load balancer health probes (returns 200 when OK)
+- External monitoring (Datadog, UptimeRobot, internal Nagios)
+- `status` field: `"ok"` when DB ping succeeds, `"degraded"` when DB unreachable
 
 ### Source freshness
 ```bash
@@ -125,10 +168,33 @@ If `status` is `degraded` or `missing-drivers`, investigate `degraded_reasons`.
 | Scheduler fails on backfill | Check network access to BCB/Fed APIs |
 | CDS data is stale | Run manual CDS ingestion (see runbook) |
 
-## 9. Backup
+## 9. Backup & Restore
+
+### Automatic backups (production)
+The `backup` service in `docker-compose.prod.yml` runs `pg_dump`
+every `BACKUP_INTERVAL_SECONDS` (default 24h) and stores gzipped
+dumps in the `pgbackups` volume. Older backups are auto-deleted
+after `BACKUP_RETENTION_DAYS` (default 14).
 
 ```bash
-pg_dump -U postgres jera_fx > backup_$(date +%Y%m%d).sql
+# List current backups
+docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+  exec backup ls -lh /backups
+
+# Copy a backup off the container
+docker cp <container_id>:/backups/jera_fx_YYYYMMDD_HHMMSS.sql.gz ./
+```
+
+### Manual backup
+```bash
+docker compose exec db pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} \
+  | gzip > manual_backup_$(date +%Y%m%d).sql.gz
+```
+
+### Restore
+```bash
+gunzip -c jera_fx_YYYYMMDD.sql.gz | \
+  docker compose exec -T db psql -U ${POSTGRES_USER} ${POSTGRES_DB}
 ```
 
 ## 10. Test Suite

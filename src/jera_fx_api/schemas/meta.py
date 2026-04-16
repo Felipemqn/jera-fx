@@ -15,3 +15,10 @@ class LastUpdatedResponse(BaseModel):
     latest_ptax_observation_date: date
     sources: list[SourceFreshness]
 
+
+class HealthResponse(BaseModel):
+    status: str  # "ok" | "degraded" | "down"
+    version: str
+    db: str  # "ok" | "error: <msg>"
+    timestamp: datetime
+

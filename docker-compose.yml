@@ -1,18 +1,16 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: jera_fx
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-jera_fx}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
       retries: 5
 
@@ -22,16 +20,19 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/jera_fx
-      APP_ENV: production
-      SERIES_CATALOG_PATH: config/series_catalog.yml
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://postgres:postgres@db:5432/jera_fx}
+      APP_ENV: ${APP_ENV:-development}
+      SERIES_CATALOG_PATH: ${SERIES_CATALOG_PATH:-config/series_catalog.yml}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
     ports:
       - "8000:8000"
     command: >
-      sh -c "
-        alembic upgrade head &&
-        uvicorn jera_fx_api.main:app --host 0.0.0.0 --port 8000
-      "
+      sh -c "alembic upgrade head && uvicorn jera_fx_api.main:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/meta/health').read()\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   client-web:
     image: python:3.12-slim
@@ -57,8 +58,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/jera_fx
-      SERIES_CATALOG_PATH: config/series_catalog.yml
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://postgres:postgres@db:5432/jera_fx}
+      SERIES_CATALOG_PATH: ${SERIES_CATALOG_PATH:-config/series_catalog.yml}
     command: python -m jera_fx_api.scheduler
     profiles:
       - refresh

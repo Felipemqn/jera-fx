@@ -20,6 +20,7 @@ Thumbs.db
 # Data and env
 .env
 .env.*
+!.env.example
 *.sqlite
 *.db
 coverage/
